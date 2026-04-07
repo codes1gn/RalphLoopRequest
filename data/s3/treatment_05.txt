@@ -1,0 +1,33 @@
+/home/albert/workspace/croktile_paper/.claude/skills/
+├── ai-tune-bfs
+│   └── SKILL.md
+├── ai-tune-from-current-best
+│   └── SKILL.md
+├── ai-tune-from-scratch
+│   └── SKILL.md
+├── fsm-engine
+│   ├── protocol
+│   │   ├── compaction-protocol.md
+│   │   ├── idea-diversity-rules.md
+│   │   ├── identity.md
+│   │   ├── loop-contract.md
+│   │   └── step-checklists.md
+│   ├── scripts
+│   │   ├── post-step-check.sh
+│   │   ├── pre-step-check.sh
+│   │   └── state-transition.sh
+│   ├── SKILL.md
+│   └── state
+│       ├── compaction-summary.md
+│       ├── .gitkeep
+│       ├── loop-state_from_scratch.json
+│       ├── loop-state.json
+│       └── push-marginal-state.json
+├── iterative-improve
+│   └── SKILL.md
+├── push-marginal
+│   └── SKILL.md
+└── ralph-loop-request
+    └── SKILL.md
+
+10 directories, 20 files
