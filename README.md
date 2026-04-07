@@ -53,47 +53,94 @@ Full data and analysis available in [`data/`](data/).
 
 ### One-Line Install (Agent-Compatible)
 
-Paste this into any AI agent (Cursor, Claude Code, Copilot, etc.) and it will install itself:
+Paste this into any AI agent and it will install itself:
 
 ```
-Install the RalphLoopRequest skill from https://github.com/codes1gn/RalphLoopRequest. 
-Clone the repo to /tmp, then copy skill/SKILL.md to the appropriate skill directories 
-for this project (.cursor/skills/ralph-loop-request/ and .claude/skills/ralph-loop-request/), 
-and also to ~/.cursor/skills/ralph-loop-request/ for personal scope.
+Install the RalphLoopRequest skill from https://github.com/codes1gn/RalphLoopRequest.
+Clone the repo, then install skill/SKILL.md into all detected agent platform directories
+in this project and in the user's home directory. Detect which platforms are present
+(.cursor/, .claude/, .github/copilot/, .codex/, .gemini/, .windsurf/, .aider/, etc.)
+and install to each one. Also install to personal scope (~/.cursor/skills/, ~/.claude/, etc.).
 ```
 
-Or run this shell command directly:
+### Adaptive Shell Installer
+
+Automatically detects which agent platforms exist and installs to all of them:
 
 ```bash
-bash -c 'REPO=/tmp/RalphLoopRequest; rm -rf $REPO; git clone --depth 1 https://github.com/codes1gn/RalphLoopRequest.git $REPO 2>/dev/null && for d in ~/.cursor/skills .cursor/skills .claude/skills; do mkdir -p "$d/ralph-loop-request" && cp "$REPO/skill/SKILL.md" "$d/ralph-loop-request/SKILL.md" && echo "Installed to $d/ralph-loop-request/"; done; rm -rf $REPO'
+bash -c '
+REPO=/tmp/RalphLoopRequest
+SKILL_NAME=ralph-loop-request
+rm -rf "$REPO"
+git clone --depth 1 https://github.com/codes1gn/RalphLoopRequest.git "$REPO" 2>/dev/null
+
+PLATFORMS=(
+  .cursor/skills
+  .claude/skills
+  .github/copilot/skills
+  .codex/skills
+  .gemini/skills
+  .windsurf/skills
+  .aider/skills
+  .cody/skills
+  .continue/skills
+)
+
+install_skill() {
+  local dir="$1/$SKILL_NAME"
+  mkdir -p "$dir" && cp "$REPO/skill/SKILL.md" "$dir/SKILL.md" && echo "[ok] $dir"
+}
+
+echo "=== Installing to project directories ==="
+for p in "${PLATFORMS[@]}"; do
+  parent_dir="$(dirname "$p")"
+  if [ -d "$parent_dir" ] || [ "$parent_dir" = ".cursor" ] || [ "$parent_dir" = ".claude" ]; then
+    install_skill "$p"
+  fi
+done
+
+echo ""
+echo "=== Installing to personal directories ==="
+for p in "${PLATFORMS[@]}"; do
+  install_skill "$HOME/$p"
+done
+
+rm -rf "$REPO"
+echo ""
+echo "Done. Restart your agent to pick up the skill."
+'
 ```
 
-### Manual Install
+### Platform-Specific Install
 
-#### Cursor (Personal - all projects)
+Pick only the platforms you use:
 
-```bash
-mkdir -p ~/.cursor/skills/ralph-loop-request
-cp skill/SKILL.md ~/.cursor/skills/ralph-loop-request/SKILL.md
-```
+| Platform | Command |
+|----------|---------|
+| **Cursor** (personal) | `mkdir -p ~/.cursor/skills/ralph-loop-request && curl -sL https://raw.githubusercontent.com/codes1gn/RalphLoopRequest/main/skill/SKILL.md -o ~/.cursor/skills/ralph-loop-request/SKILL.md` |
+| **Cursor** (project) | `mkdir -p .cursor/skills/ralph-loop-request && curl -sL https://raw.githubusercontent.com/codes1gn/RalphLoopRequest/main/skill/SKILL.md -o .cursor/skills/ralph-loop-request/SKILL.md` |
+| **Claude Code** | `mkdir -p .claude/skills/ralph-loop-request && curl -sL https://raw.githubusercontent.com/codes1gn/RalphLoopRequest/main/skill/SKILL.md -o .claude/skills/ralph-loop-request/SKILL.md` |
+| **GitHub Copilot** | `mkdir -p .github/copilot/skills/ralph-loop-request && curl -sL https://raw.githubusercontent.com/codes1gn/RalphLoopRequest/main/skill/SKILL.md -o .github/copilot/skills/ralph-loop-request/SKILL.md` |
+| **Codex** | `mkdir -p .codex/skills/ralph-loop-request && curl -sL https://raw.githubusercontent.com/codes1gn/RalphLoopRequest/main/skill/SKILL.md -o .codex/skills/ralph-loop-request/SKILL.md` |
+| **Gemini** | `mkdir -p .gemini/skills/ralph-loop-request && curl -sL https://raw.githubusercontent.com/codes1gn/RalphLoopRequest/main/skill/SKILL.md -o .gemini/skills/ralph-loop-request/SKILL.md` |
+| **Windsurf** | `mkdir -p .windsurf/skills/ralph-loop-request && curl -sL https://raw.githubusercontent.com/codes1gn/RalphLoopRequest/main/skill/SKILL.md -o .windsurf/skills/ralph-loop-request/SKILL.md` |
+| **Aider** | `mkdir -p .aider/skills/ralph-loop-request && curl -sL https://raw.githubusercontent.com/codes1gn/RalphLoopRequest/main/skill/SKILL.md -o .aider/skills/ralph-loop-request/SKILL.md` |
 
-#### Cursor (Project-level)
+### Supported Platforms
 
-```bash
-mkdir -p .cursor/skills/ralph-loop-request
-cp skill/SKILL.md .cursor/skills/ralph-loop-request/SKILL.md
-```
+| Platform | Skill Location | Status |
+|----------|---------------|--------|
+| Cursor | `.cursor/skills/` or `~/.cursor/skills/` | Tested (primary) |
+| Claude Code | `.claude/skills/` | Tested |
+| GitHub Copilot | `.github/copilot/skills/` | Compatible |
+| OpenAI Codex | `.codex/skills/` | Compatible |
+| Google Gemini CLI | `.gemini/skills/` | Compatible |
+| Windsurf | `.windsurf/skills/` | Compatible |
+| Aider | `.aider/skills/` | Compatible |
+| Cody | `.cody/skills/` | Compatible |
+| Continue | `.continue/skills/` | Compatible |
 
-#### Claude Code (Project-level)
-
-```bash
-mkdir -p .claude/skills/ralph-loop-request
-cp skill/SKILL.md .claude/skills/ralph-loop-request/SKILL.md
-```
-
-#### Other Platforms
-
-Copy `skill/SKILL.md` to wherever your platform loads agent skills from, and ensure the description field is indexed for skill discovery.
+> **Note**: "Tested" means validated with A/B tests. "Compatible" means the skill format (YAML frontmatter + markdown body) is standard and should work, but hasn't been explicitly A/B tested on that platform. The skill uses no platform-specific APIs beyond AskQuestion (with conversational fallback).
 
 ## How It Works
 
