@@ -65,16 +65,19 @@ and install to each one. Also install to personal scope (~/.cursor/skills/, ~/.c
 
 ### Adaptive Shell Installer
 
-Automatically detects which agent platforms exist and installs to all of them:
+Installs to all supported platforms — both project-level (current directory) and personal (home directory):
 
 ```bash
 bash -c '
-REPO=/tmp/RalphLoopRequest
-SKILL_NAME=ralph-loop-request
+REPO=/tmp/_rlr_install
+SKILL=ralph-loop-request
+SRC=skill/SKILL.md
 rm -rf "$REPO"
-git clone --depth 1 https://github.com/codes1gn/RalphLoopRequest.git "$REPO" 2>/dev/null
+git clone --depth 1 https://github.com/codes1gn/RalphLoopRequest.git "$REPO" 2>/dev/null || {
+  echo "[error] git clone failed"; exit 1
+}
 
-PLATFORMS=(
+DIRS=(
   .cursor/skills
   .claude/skills
   .github/copilot/skills
@@ -86,45 +89,48 @@ PLATFORMS=(
   .continue/skills
 )
 
-install_skill() {
-  local dir="$1/$SKILL_NAME"
-  mkdir -p "$dir" && cp "$REPO/skill/SKILL.md" "$dir/SKILL.md" && echo "[ok] $dir"
-}
-
-echo "=== Installing to project directories ==="
-for p in "${PLATFORMS[@]}"; do
-  parent_dir="$(dirname "$p")"
-  if [ -d "$parent_dir" ] || [ "$parent_dir" = ".cursor" ] || [ "$parent_dir" = ".claude" ]; then
-    install_skill "$p"
-  fi
-done
-
-echo ""
-echo "=== Installing to personal directories ==="
-for p in "${PLATFORMS[@]}"; do
-  install_skill "$HOME/$p"
+ok=0 skip=0
+for d in "${DIRS[@]}"; do
+  # Project-level: install to all platforms
+  mkdir -p "$d/$SKILL" && cp "$REPO/$SRC" "$d/$SKILL/SKILL.md" && echo "[ok] ./$d/$SKILL" && ((ok++))
+  # Personal: install to home
+  mkdir -p "$HOME/$d/$SKILL" && cp "$REPO/$SRC" "$HOME/$d/$SKILL/SKILL.md" && echo "[ok] ~/$d/$SKILL" && ((ok++))
 done
 
 rm -rf "$REPO"
 echo ""
-echo "Done. Restart your agent to pick up the skill."
+echo "Installed to $ok locations across $(( ${#DIRS[@]} )) platforms."
+echo "Restart your agent session to activate."
 '
 ```
 
+> **Note**: This installs to ALL platforms unconditionally. To install only to detected platforms, add `[ -d "$(dirname "$d")" ] &&` before each `mkdir`.
+
 ### Platform-Specific Install
 
-Pick only the platforms you use:
+Pick only the platforms you use. Each command clones, copies, and cleans up (works even when `raw.githubusercontent.com` is blocked):
+
+```bash
+# Helper function — paste once, then use per-platform commands below
+rlr_install() {
+  local T=/tmp/_rlr D="$1/ralph-loop-request"
+  rm -rf "$T" && git clone --depth 1 https://github.com/codes1gn/RalphLoopRequest.git "$T" 2>/dev/null \
+    && mkdir -p "$D" && cp "$T/skill/SKILL.md" "$D/SKILL.md" && rm -rf "$T" && echo "[ok] $D"
+}
+```
 
 | Platform | Command |
 |----------|---------|
-| **Cursor** (personal) | `mkdir -p ~/.cursor/skills/ralph-loop-request && curl -sL https://raw.githubusercontent.com/codes1gn/RalphLoopRequest/main/skill/SKILL.md -o ~/.cursor/skills/ralph-loop-request/SKILL.md` |
-| **Cursor** (project) | `mkdir -p .cursor/skills/ralph-loop-request && curl -sL https://raw.githubusercontent.com/codes1gn/RalphLoopRequest/main/skill/SKILL.md -o .cursor/skills/ralph-loop-request/SKILL.md` |
-| **Claude Code** | `mkdir -p .claude/skills/ralph-loop-request && curl -sL https://raw.githubusercontent.com/codes1gn/RalphLoopRequest/main/skill/SKILL.md -o .claude/skills/ralph-loop-request/SKILL.md` |
-| **GitHub Copilot** | `mkdir -p .github/copilot/skills/ralph-loop-request && curl -sL https://raw.githubusercontent.com/codes1gn/RalphLoopRequest/main/skill/SKILL.md -o .github/copilot/skills/ralph-loop-request/SKILL.md` |
-| **Codex** | `mkdir -p .codex/skills/ralph-loop-request && curl -sL https://raw.githubusercontent.com/codes1gn/RalphLoopRequest/main/skill/SKILL.md -o .codex/skills/ralph-loop-request/SKILL.md` |
-| **Gemini** | `mkdir -p .gemini/skills/ralph-loop-request && curl -sL https://raw.githubusercontent.com/codes1gn/RalphLoopRequest/main/skill/SKILL.md -o .gemini/skills/ralph-loop-request/SKILL.md` |
-| **Windsurf** | `mkdir -p .windsurf/skills/ralph-loop-request && curl -sL https://raw.githubusercontent.com/codes1gn/RalphLoopRequest/main/skill/SKILL.md -o .windsurf/skills/ralph-loop-request/SKILL.md` |
-| **Aider** | `mkdir -p .aider/skills/ralph-loop-request && curl -sL https://raw.githubusercontent.com/codes1gn/RalphLoopRequest/main/skill/SKILL.md -o .aider/skills/ralph-loop-request/SKILL.md` |
+| **Cursor** (personal) | `rlr_install ~/.cursor/skills` |
+| **Cursor** (project) | `rlr_install .cursor/skills` |
+| **Claude Code** | `rlr_install .claude/skills` |
+| **GitHub Copilot** | `rlr_install .github/copilot/skills` |
+| **Codex** | `rlr_install .codex/skills` |
+| **Gemini** | `rlr_install .gemini/skills` |
+| **Windsurf** | `rlr_install .windsurf/skills` |
+| **Aider** | `rlr_install .aider/skills` |
+| **Cody** | `rlr_install .cody/skills` |
+| **Continue** | `rlr_install .continue/skills` |
 
 ### Supported Platforms
 
