@@ -1,7 +1,8 @@
 <p align="center">
   <h1 align="center">RalphLoopRequest</h1>
   <p align="center">
-    <strong>Never let your AI agent end silently again.</strong>
+    <strong>Make every AI agent request 5x more durable.</strong><br>
+    <sub>One skill that turns single-shot agent interactions into multi-turn conversations.</sub>
   </p>
 </p>
 
@@ -13,9 +14,11 @@
   <img alt="Effect Size" src="https://img.shields.io/badge/Effect%20Size-Maximum%20(π)-orange">
   <img alt="p-value" src="https://img.shields.io/badge/p--value-%3C%202.2e--16-red">
   <img alt="Platforms" src="https://img.shields.io/badge/Platforms-9%20supported-purple">
+  <img alt="ROI" src="https://img.shields.io/badge/Request%20ROI-5x%20more%20durable-gold">
 </p>
 
 <p align="center">
+  <a href="#the-economics">Why</a> &bull;
   <a href="#installation">Install</a> &bull;
   <a href="#quantified-results">Results</a> &bull;
   <a href="#how-it-works">How It Works</a> &bull;
@@ -25,13 +28,47 @@
 
 ---
 
+## The Economics
+
+AI agent requests are **expensive**. On usage-based pricing (Cursor, Claude Pro, Copilot, API credits), every request costs real money. Here's the problem:
+
+```
+Without RalphLoopRequest:                    With RalphLoopRequest:
+
+  Request 1: "Add auth to the app"           Request 1: "Add auth to the app"
+  Agent: "Done." (stops)                     Agent: "Done. What's next?"
+  $$$                                          → "Add tests"
+                                               → "Add rate limiting"  
+  Request 2: "Add tests for auth"              → "Add error handling"
+  Agent: "Done." (stops)                       → "Commit all changes"
+  $$$                                          → "Done"
+                                             $
+  Request 3: "Add rate limiting"             
+  Agent: "Done." (stops)                     1 request = 5 tasks completed
+  $$$                                        
+                                             
+  Request 4: "Add error handling"            
+  Agent: "Done." (stops)                     
+  $$$                                        
+
+  Request 5: "Commit all changes"            
+  Agent: "Done." (stops)                     
+  $$$                                        
+
+  5 requests = 5 tasks completed             
+```
+
+**Each request you make is a paid transaction.** Without this skill, the agent completes one task and exits, forcing you to pay again. With this skill, the agent keeps the conversation alive — iterate, refine, continue — until *you* decide to stop. One request becomes a full working session.
+
+> **The math**: If you typically need 3-5 follow-up interactions per task, this skill makes each request **3-5x more cost-effective**. On Cursor Pro ($20/mo with limited requests), that's the difference between running out of requests mid-project and having plenty to spare.
+
 ## The Problem
 
 AI coding agents complete tasks with declarative endings:
 
 > "Added the Fibonacci function to `fib.py`."
 
-Then **silence**. You must figure out what to do next, type a new prompt from scratch, and hope the agent picks up context. This breaks flow, wastes time, and puts the cognitive burden on the human.
+Then **silence**. You must figure out what to do next, type a new prompt from scratch, and hope the agent picks up context. This breaks flow, wastes money, and puts the cognitive burden on the human.
 
 ## The Solution
 
@@ -47,6 +84,8 @@ RalphLoopRequest is a universal agent skill that converts every task ending into
 > 5. Done
 
 When the `AskQuestion` tool is available (Cursor IDE), it renders as a **structured UI widget** with clickable options. Otherwise, it falls back to numbered text options.
+
+**One install. Every request becomes a working session instead of a one-shot interaction.**
 
 ---
 
