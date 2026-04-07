@@ -108,29 +108,49 @@ echo "Restart your agent session to activate."
 
 ### Platform-Specific Install
 
-Pick only the platforms you use. Each command clones, copies, and cleans up (works even when `raw.githubusercontent.com` is blocked):
+Two methods — **curl** (fastest, no git needed) and **git clone** (works everywhere):
+
+#### Method A: curl via GitHub API (single file, no clone)
+
+Works even when `raw.githubusercontent.com` is blocked — uses GitHub Contents API with raw media type:
 
 ```bash
-# Helper function — paste once, then use per-platform commands below
+# One-liner per platform — replace TARGET with your platform path
+TARGET=~/.cursor/skills  # change this
+mkdir -p "$TARGET/ralph-loop-request" && \
+curl -sL -H "Accept: application/vnd.github.raw+json" \
+  "https://api.github.com/repos/codes1gn/RalphLoopRequest/contents/skill/SKILL.md" \
+  -o "$TARGET/ralph-loop-request/SKILL.md" && echo "[ok] $TARGET/ralph-loop-request"
+```
+
+Quick copy-paste per platform:
+
+| Platform | curl Command |
+|----------|---------|
+| **Cursor** (personal) | `mkdir -p ~/.cursor/skills/ralph-loop-request && curl -sL -H "Accept: application/vnd.github.raw+json" "https://api.github.com/repos/codes1gn/RalphLoopRequest/contents/skill/SKILL.md" -o ~/.cursor/skills/ralph-loop-request/SKILL.md` |
+| **Cursor** (project) | `mkdir -p .cursor/skills/ralph-loop-request && curl -sL -H "Accept: application/vnd.github.raw+json" "https://api.github.com/repos/codes1gn/RalphLoopRequest/contents/skill/SKILL.md" -o .cursor/skills/ralph-loop-request/SKILL.md` |
+| **Claude Code** | `mkdir -p .claude/skills/ralph-loop-request && curl -sL -H "Accept: application/vnd.github.raw+json" "https://api.github.com/repos/codes1gn/RalphLoopRequest/contents/skill/SKILL.md" -o .claude/skills/ralph-loop-request/SKILL.md` |
+| **GitHub Copilot** | `mkdir -p .github/copilot/skills/ralph-loop-request && curl -sL -H "Accept: application/vnd.github.raw+json" "https://api.github.com/repos/codes1gn/RalphLoopRequest/contents/skill/SKILL.md" -o .github/copilot/skills/ralph-loop-request/SKILL.md` |
+| **Codex** | `mkdir -p .codex/skills/ralph-loop-request && curl -sL -H "Accept: application/vnd.github.raw+json" "https://api.github.com/repos/codes1gn/RalphLoopRequest/contents/skill/SKILL.md" -o .codex/skills/ralph-loop-request/SKILL.md` |
+| **Gemini** | `mkdir -p .gemini/skills/ralph-loop-request && curl -sL -H "Accept: application/vnd.github.raw+json" "https://api.github.com/repos/codes1gn/RalphLoopRequest/contents/skill/SKILL.md" -o .gemini/skills/ralph-loop-request/SKILL.md` |
+| **Windsurf** | `mkdir -p .windsurf/skills/ralph-loop-request && curl -sL -H "Accept: application/vnd.github.raw+json" "https://api.github.com/repos/codes1gn/RalphLoopRequest/contents/skill/SKILL.md" -o .windsurf/skills/ralph-loop-request/SKILL.md` |
+| **Aider** | `mkdir -p .aider/skills/ralph-loop-request && curl -sL -H "Accept: application/vnd.github.raw+json" "https://api.github.com/repos/codes1gn/RalphLoopRequest/contents/skill/SKILL.md" -o .aider/skills/ralph-loop-request/SKILL.md` |
+| **Cody** | `mkdir -p .cody/skills/ralph-loop-request && curl -sL -H "Accept: application/vnd.github.raw+json" "https://api.github.com/repos/codes1gn/RalphLoopRequest/contents/skill/SKILL.md" -o .cody/skills/ralph-loop-request/SKILL.md` |
+| **Continue** | `mkdir -p .continue/skills/ralph-loop-request && curl -sL -H "Accept: application/vnd.github.raw+json" "https://api.github.com/repos/codes1gn/RalphLoopRequest/contents/skill/SKILL.md" -o .continue/skills/ralph-loop-request/SKILL.md` |
+
+#### Method B: git clone helper (works without curl)
+
+```bash
 rlr_install() {
   local T=/tmp/_rlr D="$1/ralph-loop-request"
   rm -rf "$T" && git clone --depth 1 https://github.com/codes1gn/RalphLoopRequest.git "$T" 2>/dev/null \
     && mkdir -p "$D" && cp "$T/skill/SKILL.md" "$D/SKILL.md" && rm -rf "$T" && echo "[ok] $D"
 }
-```
 
-| Platform | Command |
-|----------|---------|
-| **Cursor** (personal) | `rlr_install ~/.cursor/skills` |
-| **Cursor** (project) | `rlr_install .cursor/skills` |
-| **Claude Code** | `rlr_install .claude/skills` |
-| **GitHub Copilot** | `rlr_install .github/copilot/skills` |
-| **Codex** | `rlr_install .codex/skills` |
-| **Gemini** | `rlr_install .gemini/skills` |
-| **Windsurf** | `rlr_install .windsurf/skills` |
-| **Aider** | `rlr_install .aider/skills` |
-| **Cody** | `rlr_install .cody/skills` |
-| **Continue** | `rlr_install .continue/skills` |
+# Then use: rlr_install ~/.cursor/skills
+#           rlr_install .claude/skills
+#           etc.
+```
 
 ### Supported Platforms
 
