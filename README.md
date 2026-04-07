@@ -51,28 +51,47 @@ Full data and analysis available in [`data/`](data/).
 
 ## Installation
 
-### Cursor (Personal - all projects)
+### One-Line Install (Agent-Compatible)
+
+Paste this into any AI agent (Cursor, Claude Code, Copilot, etc.) and it will install itself:
+
+```
+Install the RalphLoopRequest skill from https://github.com/codes1gn/RalphLoopRequest. 
+Clone the repo to /tmp, then copy skill/SKILL.md to the appropriate skill directories 
+for this project (.cursor/skills/ralph-loop-request/ and .claude/skills/ralph-loop-request/), 
+and also to ~/.cursor/skills/ralph-loop-request/ for personal scope.
+```
+
+Or run this shell command directly:
+
+```bash
+bash -c 'REPO=/tmp/RalphLoopRequest; rm -rf $REPO; git clone --depth 1 https://github.com/codes1gn/RalphLoopRequest.git $REPO 2>/dev/null && for d in ~/.cursor/skills .cursor/skills .claude/skills; do mkdir -p "$d/ralph-loop-request" && cp "$REPO/skill/SKILL.md" "$d/ralph-loop-request/SKILL.md" && echo "Installed to $d/ralph-loop-request/"; done; rm -rf $REPO'
+```
+
+### Manual Install
+
+#### Cursor (Personal - all projects)
 
 ```bash
 mkdir -p ~/.cursor/skills/ralph-loop-request
 cp skill/SKILL.md ~/.cursor/skills/ralph-loop-request/SKILL.md
 ```
 
-### Cursor (Project-level)
+#### Cursor (Project-level)
 
 ```bash
 mkdir -p .cursor/skills/ralph-loop-request
 cp skill/SKILL.md .cursor/skills/ralph-loop-request/SKILL.md
 ```
 
-### Claude Code (Project-level)
+#### Claude Code (Project-level)
 
 ```bash
 mkdir -p .claude/skills/ralph-loop-request
 cp skill/SKILL.md .claude/skills/ralph-loop-request/SKILL.md
 ```
 
-### Other Platforms
+#### Other Platforms
 
 Copy `skill/SKILL.md` to wherever your platform loads agent skills from, and ensure the description field is indexed for skill discovery.
 
