@@ -1,9 +1,9 @@
 ---
-name: ralph-loop-request
+name: durable-request
 description: Universal end-of-task continuation gate. Forces every agent turn that completes work to present an interactive checkpoint (AskQuestion or conversational) instead of silently finishing. Applies to ALL tasks — coding, writing, debugging, research, analysis, refactoring, any prompt. Use always, on every task completion, before ending any turn where work was performed.
 ---
 
-# Ralph Loop Request — Never End Silently
+# Durable Request — Never End Silently
 
 <EXTREMELY-IMPORTANT>
 ## The One Rule
