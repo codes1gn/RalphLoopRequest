@@ -24,9 +24,15 @@ The ONLY exception: pure informational Q&A with no action taken (e.g., "What doe
 
 ## Checkpoint Mechanism
 
-### Primary: AskQuestion Tool (Cursor / environments with structured UI)
+### Primary: Interactive UI Tool (Cursor, Claude Code, OpenCode)
 
-When the AskQuestion tool is available, use it:
+Use the available interactive tool for your environment:
+
+- **Cursor**: `AskQuestion` tool
+- **Claude Code**: `AskUserQuestion` tool  
+- **OpenCode**: `question` tool
+
+When available, use it:
 
 ```json
 {
@@ -47,9 +53,9 @@ When the AskQuestion tool is available, use it:
 
 Adapt the prompt and options to the task context. Add task-specific options when relevant (e.g., "Run tests", "Deploy", "Commit changes").
 
-### Fallback: Conversational Checkpoint (CLI / subagents / any environment)
+### Fallback: Conversational Checkpoint (CLI / subagents / other environments)
 
-If AskQuestion is unavailable, end with a clear conversational prompt using this exact format:
+If the interactive UI tool (AskQuestion/question/AskUserQuestion) is unavailable, end with a clear conversational prompt using this exact format:
 
 ```
 ---

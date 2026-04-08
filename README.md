@@ -125,15 +125,16 @@ Change the target path for your platform — see [install.md](install.md) for al
 |:---------|:--------------|:------:|
 | Cursor | `.cursor/skills/` or `~/.cursor/skills/` | Tested |
 | Claude Code | `.claude/skills/` | Tested |
-| GitHub Copilot | `.github/copilot/skills/` | Compatible |
-| OpenAI Codex | `.codex/skills/` | Compatible |
-| Google Gemini CLI | `.gemini/skills/` | Compatible |
-| Windsurf | `.windsurf/skills/` | Compatible |
-| Aider | `.aider/skills/` | Compatible |
-| Cody | `.cody/skills/` | Compatible |
-| Continue | `.continue/skills/` | Compatible |
+| OpenCode | `.skills/` | Compatible but not tested |
+| GitHub Copilot | `.github/copilot/skills/` | Compatible but not tested |
+| OpenAI Codex | `.codex/skills/` | Compatible but not tested |
+| Google Gemini CLI | `.gemini/skills/` | Compatible but not tested |
+| Windsurf | `.windsurf/skills/` | Compatible but not tested |
+| Aider | `.aider/skills/` | Compatible but not tested |
+| Cody | `.cody/skills/` | Compatible but not tested |
+| Continue | `.continue/skills/` | Compatible but not tested |
 
-> **Tested** = validated with A/B tests. **Compatible** = standard skill format (YAML frontmatter + markdown), should work but not yet A/B tested.
+> **Tested** = validated with A/B tests. **Compatible but not tested** = standard skill format (YAML frontmatter + markdown), should work but not yet A/B tested.
 
 ---
 
