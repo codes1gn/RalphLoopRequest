@@ -47,11 +47,20 @@ When available, use it:
       {"id": "different", "label": "Switch to a different task"},
       {"id": "done",      "label": "I'm satisfied, we're done"}
     ]
+  },
+  {
+    "id": "freeform",
+    "prompt": "Or type your own instruction:",
+    "options": [
+      {"id": "skip", "label": "(skip — use the selection above instead)"}
+    ]
   }]
 }
 ```
 
 Adapt the prompt and options to the task context. Add task-specific options when relevant (e.g., "Run tests", "Deploy", "Commit changes").
+
+**CRITICAL — free-text input:** The checkpoint MUST always include a second question with `id: "freeform"` that lets the user type an arbitrary follow-up instruction. The user should never be forced to pick only from predefined options. If the user fills in `freeform`, treat that as the next instruction regardless of what they selected in `next_action`.
 
 ### Fallback: Conversational Checkpoint (CLI / subagents / other environments)
 
@@ -67,10 +76,12 @@ If the interactive UI tool (AskQuestion/question/AskUserQuestion) is unavailable
 3. Review the changes
 4. Something else entirely
 5. Done for now
+
+Or just tell me what to do next:
 ---
 ```
 
-Always use numbered options. Always include "Done" as the last option. Always adapt option text to match the task that was performed.
+Always use numbered options. Always include "Done" as the last option. Always adapt option text to match the task that was performed. Always end with an open-ended "Or just tell me what to do next:" line so the user can type a free-form instruction.
 
 ## Anti-Silent-Completion Rules
 
