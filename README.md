@@ -102,7 +102,7 @@ Paste this into any AI agent chat — it will install itself:
 
 ```
 Install durable-request by following the instructions at:
-https://git.enflame.cn/heng.shi/DurableRequest/-/raw/main/install.md
+https://git.enflame.cn/skills/DurableRequest/-/raw/main/install.md
 ```
 
 The agent fetches the install guide and handles everything: downloading the skill file, creating directories, and copying to all 9 platform locations at both project and personal scope.
@@ -111,7 +111,7 @@ The agent fetches the install guide and handles everything: downloading the skil
 
 ```bash
 mkdir -p ~/.cursor/skills/durable-request && \
-curl -sL "https://git.enflame.cn/heng.shi/DurableRequest/-/raw/main/skill/SKILL.md" \
+curl -sL "https://git.enflame.cn/skills/DurableRequest/-/raw/main/skill/SKILL.md" \
   -o ~/.cursor/skills/durable-request/SKILL.md
 ```
 
