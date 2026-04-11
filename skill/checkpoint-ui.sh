@@ -57,8 +57,9 @@ else
 fi
 
 echo "$ANSWER" > "$ANSWER_FILE"
-rm -f "$LOCK_FILE"
 
 echo ""
 echo "  * Sent: $ANSWER"
-sleep 0.5
+sleep 0.3
+
+rm -f "$LOCK_FILE"

@@ -127,15 +127,15 @@ else
 fi
 
 # ── 3. Poll for answer (print keep-alive messages to prevent Shell timeout) ─
-TIMEOUT=600  # 10 minutes max (in half-second ticks)
+TIMEOUT=1200  # 10 minutes max (in quarter-second ticks)
 ELAPSED=0
-KEEPALIVE_INTERVAL=20  # Print a message every 10 seconds (20 * 0.5s)
+KEEPALIVE_INTERVAL=40  # Print a message every 10 seconds (40 * 0.25s)
 
-while [ -f "$LOCK_FILE" ] && [ "$ELAPSED" -lt "$TIMEOUT" ]; do
-  sleep 0.5
+while [ ! -f "$ANSWER_FILE" ] && [ "$ELAPSED" -lt "$TIMEOUT" ]; do
+  sleep 0.25
   ELAPSED=$((ELAPSED + 1))
   if [ $((ELAPSED % KEEPALIVE_INTERVAL)) -eq 0 ]; then
-    echo "[durable-request] Still waiting for user response... ($((ELAPSED / 2))s)"
+    echo "[durable-request] Still waiting for user response... ($((ELAPSED / 4))s)"
   fi
 done
 
@@ -149,4 +149,7 @@ fi
 ANSWER=$(cat "$ANSWER_FILE")
 rm -f "$ANSWER_FILE" "$LOCK_FILE" "$QUESTION_FILE"
 
+echo ""
+echo "[durable-request] ================================"
 echo "[durable-request] User responded: $ANSWER"
+echo "[durable-request] ================================"
