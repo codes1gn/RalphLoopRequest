@@ -31,10 +31,10 @@ durable-request uses three layers. The agent tries them in order of preference:
 Layer 1 (tool-based)              Layer 2 (CLI tool)                Layer 3 (conversational)
 ────────────────────────────────  ────────────────────────────────  ────────────────────────
 AskQuestion / AskUserQuestion     checkpoint.sh via Shell tool      Numbered text options
-Built-in agent tool               Suspends TUI, interactive prompt  Plain text fallback
-Blocks agent turn, UI widget      Blocks via /dev/tty               Works everywhere
-User picks from structured UI     User picks in real terminal       User types response
-Cursor editor, Claude Code        Cursor CLI                        Subagents, all platforms
+Built-in agent tool               Tmux split-pane interactive UI    Plain text fallback
+Blocks agent turn, UI widget      Blocks via file lock + polling    Works everywhere
+User picks from structured UI     User picks in tmux pane           User types response
+Cursor editor, Claude Code        Cursor CLI (requires tmux)        Subagents, all platforms
 ```
 
 ## Checkpoint Mechanism
@@ -110,7 +110,7 @@ Rules:
 
 #### Cursor CLI (Parent Agent): Call `checkpoint.sh` via Shell
 
-In Cursor CLI, `AskQuestion` is not available. Instead, use the **checkpoint.sh** CLI tool which suspends the TUI, presents an interactive prompt directly on the terminal, and returns the user's choice:
+In Cursor CLI, `AskQuestion` is not available. Instead, use the **checkpoint.sh** CLI tool which opens a tmux split pane with an interactive prompt and returns the user's choice:
 
 ```bash
 bash ~/.cursor/skills/durable-request/checkpoint.sh \
@@ -122,14 +122,21 @@ bash ~/.cursor/skills/durable-request/checkpoint.sh \
   "Done for now"
 ```
 
+**Prerequisite:** cursor-agent must be running inside a tmux session. Add this alias to `~/.bashrc`:
+
+```bash
+alias cursor-agent='tmux new-session -A -s cursor -- cursor-agent'
+```
+
 Rules:
 - Call this via the **Shell** tool
 - First argument is the prompt (1-2 sentence summary of what was completed + "What would you like to do next?")
 - Subsequent arguments are context-adapted options
 - The script automatically appends a freeform "I'll type my own instruction" option as the last choice
 - The script returns `[durable-request] User responded: <choice>` — use this to continue
+- If tmux is not available, the script falls back with an auto-selected first option and prints setup instructions
 
-This is a **blocking call** — the Shell tool waits until the user responds. The agent's turn is preserved (same request, same context). This achieves the same "durable loop" as `AskQuestion` in the editor.
+**How it works:** The Shell call blocks while `checkpoint.sh` creates a tmux split pane running `checkpoint-ui.sh`. The user sees an interactive prompt in the bottom pane, selects an option, and the pane auto-closes. The agent reads the response from stdout and continues — same request, same context.
 
 #### Claude Code: Call `AskUserQuestion`
 

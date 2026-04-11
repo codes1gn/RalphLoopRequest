@@ -1,90 +1,106 @@
 #!/usr/bin/env bash
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# durable-request checkpoint — interactive CLI checkpoint tool
+# durable-request checkpoint — interactive CLI checkpoint via tmux split pane
 #
-# Suspends the Cursor CLI TUI, presents an interactive question on the real
-# terminal, captures the user's choice, resumes Cursor, and prints the
-# answer to stdout (where the agent reads it).
+# Called by the agent via the Shell tool. Creates a tmux split pane where
+# the user selects their next action, then returns their choice to the agent.
 #
 # Usage:
 #   checkpoint.sh "What would you like to do next?" \
 #                 "Run tests" "Iterate" "Review diff" "Done"
 #
-# The first argument is the prompt. All subsequent arguments are options.
-# The script always appends a freeform "Type your own instruction" option.
+# Requirements: tmux (cursor-agent must be running inside a tmux session)
 #
-# File layout (self-contained in the skills folder):
-#   .checkpoint-question   — serialized question (prompt + options)
-#   .checkpoint-answer     — user's response
-#   .checkpoint-lock       — present while waiting for user input
+# File protocol (self-contained in the skills folder):
+#   .ckpt-question   — serialized question (prompt + options)
+#   .ckpt-answer     — user's response (written by checkpoint-ui.sh)
+#   .ckpt-lock       — present while waiting for user input
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 set -euo pipefail
 
 SKILL_DIR="$(cd "$(dirname "$0")" && pwd)"
-QUESTION_FILE="$SKILL_DIR/.checkpoint-question"
-ANSWER_FILE="$SKILL_DIR/.checkpoint-answer"
-LOCK_FILE="$SKILL_DIR/.checkpoint-lock"
+QUESTION_FILE="$SKILL_DIR/.ckpt-question"
+ANSWER_FILE="$SKILL_DIR/.ckpt-answer"
+LOCK_FILE="$SKILL_DIR/.ckpt-lock"
+UI_SCRIPT="$SKILL_DIR/checkpoint-ui.sh"
 
 PROMPT="${1:-What would you like to do next?}"
 shift || true
 OPTIONS=("$@")
-OPTIONS+=("I'll type my own instruction")
 
+if [ ${#OPTIONS[@]} -eq 0 ]; then
+  OPTIONS=("Continue" "Done")
+fi
+
+OPTIONS+=("I'll type my own instruction")
 NUM_OPTIONS=${#OPTIONS[@]}
 
 cleanup() {
   rm -f "$LOCK_FILE" "$QUESTION_FILE"
-  if [ -n "${CURSOR_PID:-}" ]; then
-    kill -CONT "$CURSOR_PID" 2>/dev/null || true
-  fi
-  if [ -n "${SAVED_STTY:-}" ]; then
-    stty "$SAVED_STTY" < /dev/tty 2>/dev/null || true
-  fi
 }
 trap cleanup EXIT
 
-# ── 1. Persist question to file ──────────────────────────────────────────
+# ── 1. Serialize question to file ────────────────────────────────────────
+rm -f "$ANSWER_FILE" "$QUESTION_FILE" "$LOCK_FILE"
+
 {
-  echo "PROMPT=$PROMPT"
-  for i in "${!OPTIONS[@]}"; do
-    echo "OPTION_$i=${OPTIONS[$i]}"
+  echo "$PROMPT"
+  for opt in "${OPTIONS[@]}"; do
+    echo "$opt"
   done
 } > "$QUESTION_FILE"
 
 touch "$LOCK_FILE"
 
-# ── 2. Find and suspend Cursor Agent CLI TUI ─────────────────────────────
-CURSOR_PID=""
-for pid in $(pgrep -f 'cursor-agent' 2>/dev/null || true); do
-  if [ "$pid" != "$$" ] && [ "$pid" != "$PPID" ]; then
-    CURSOR_PID="$pid"
-    break
+# ── 2. Detect tmux and launch UI pane ────────────────────────────────────
+find_tmux_session() {
+  # Try to find the tmux session that owns cursor-agent
+  local cursor_pid
+  cursor_pid=$(pgrep -f 'cursor-agent|/agent ' 2>/dev/null | head -1 || true)
+  if [ -z "$cursor_pid" ]; then
+    return 1
   fi
-done
 
-if [ -z "$CURSOR_PID" ]; then
-  for pid in $(pgrep -f 'cursor' 2>/dev/null | head -5); do
-    cmdline=$(ps -o args= -p "$pid" 2>/dev/null || true)
-    if echo "$cmdline" | grep -q 'agent\|cli'; then
-      CURSOR_PID="$pid"
-      break
-    fi
-  done
+  local cursor_tty
+  cursor_tty=$(ps -o tty= -p "$cursor_pid" 2>/dev/null | tr -d ' ' || true)
+  if [ -z "$cursor_tty" ] || [ "$cursor_tty" = "?" ]; then
+    return 1
+  fi
+
+  # Find tmux session containing this tty
+  tmux list-panes -a -F '#{pane_tty} #{session_name}:#{window_index}.#{pane_index}' 2>/dev/null \
+    | grep "/dev/$cursor_tty" \
+    | head -1 \
+    | awk '{print $2}'
+}
+
+TMUX_TARGET=""
+
+if [ -n "${TMUX:-}" ]; then
+  # We're inside tmux — use current session
+  TMUX_TARGET=$(tmux display-message -p '#{session_name}:#{window_index}' 2>/dev/null || true)
+elif command -v tmux &>/dev/null; then
+  TMUX_TARGET=$(find_tmux_session)
 fi
 
-SAVED_STTY=""
-if [ -n "$CURSOR_PID" ]; then
-  SAVED_STTY=$(stty -g < /dev/tty 2>/dev/null || true)
-  kill -TSTP "$CURSOR_PID" 2>/dev/null || true
-  sleep 0.3
-  stty sane < /dev/tty 2>/dev/null || true
-fi
-
-# ── 3. Render interactive prompt on the real terminal ────────────────────
-TTY="/dev/tty"
-if [ ! -c "$TTY" ]; then
-  echo "[durable-request] ERROR: /dev/tty not available. This tool must be run from a real terminal (Cursor CLI)."
+if [ -n "$TMUX_TARGET" ]; then
+  # Launch UI in a split pane (bottom, 12 lines)
+  tmux split-window -t "$TMUX_TARGET" -v -l 12 \
+    "bash '$UI_SCRIPT' '$SKILL_DIR'" 2>/dev/null || {
+    echo "[durable-request] ERROR: Failed to create tmux split pane."
+    echo "[durable-request] Falling back to non-interactive mode."
+    echo "${OPTIONS[0]}" > "$ANSWER_FILE"
+    rm -f "$LOCK_FILE"
+    echo "[durable-request] Auto-selected: ${OPTIONS[0]}"
+    exit 0
+  }
+else
+  echo "[durable-request] ERROR: tmux session not found."
+  echo "[durable-request] For CLI checkpoints, run cursor-agent inside tmux:"
+  echo "[durable-request]   tmux new-session -- cursor-agent"
+  echo "[durable-request] Or add this alias to ~/.bashrc:"
+  echo "[durable-request]   alias cursor-agent='tmux new-session -A -s cursor -- cursor-agent'"
   echo "[durable-request] Falling back to non-interactive mode."
   echo "${OPTIONS[0]}" > "$ANSWER_FILE"
   rm -f "$LOCK_FILE"
@@ -92,59 +108,23 @@ if [ ! -c "$TTY" ]; then
   exit 0
 fi
 
-{
-  echo ""
-  echo "  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓"
-  echo "  ┃  [durable-request] Checkpoint                           ┃"
-  echo "  ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫"
-  echo "  ┃                                                          ┃"
-  printf "  ┃  %-56s ┃\n" "$PROMPT"
-  echo "  ┃                                                          ┃"
-  for i in "${!OPTIONS[@]}"; do
-    NUM=$((i + 1))
-    if [ "$NUM" -eq "$NUM_OPTIONS" ]; then
-      printf "  ┃    \033[33m%d.\033[0m %-50s ┃\n" "$NUM" "${OPTIONS[$i]}"
-    else
-      printf "  ┃    \033[36m%d.\033[0m %-50s ┃\n" "$NUM" "${OPTIONS[$i]}"
-    fi
-  done
-  echo "  ┃                                                          ┃"
-  echo "  ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛"
-  echo ""
-  echo -n "  Enter choice (number) or type freely: "
-} > "$TTY"
+# ── 3. Poll for answer ──────────────────────────────────────────────────
+TIMEOUT=300  # 5 minutes max
+ELAPSED=0
 
-read -r CHOICE < "$TTY"
+while [ -f "$LOCK_FILE" ] && [ "$ELAPSED" -lt "$TIMEOUT" ]; do
+  sleep 0.5
+  ELAPSED=$((ELAPSED + 1))
+done
 
-# ── 4. Resolve choice ───────────────────────────────────────────────────
-ANSWER=""
-if [[ "$CHOICE" =~ ^[0-9]+$ ]] && [ "$CHOICE" -ge 1 ] && [ "$CHOICE" -le "$NUM_OPTIONS" ]; then
-  IDX=$((CHOICE - 1))
-  SELECTED="${OPTIONS[$IDX]}"
-  if [ "$CHOICE" -eq "$NUM_OPTIONS" ]; then
-    echo -n "  Type your instruction: " > "$TTY"
-    read -r FREEFORM < "$TTY"
-    ANSWER="$FREEFORM"
-  else
-    ANSWER="$SELECTED"
-  fi
-else
-  ANSWER="$CHOICE"
+if [ ! -f "$ANSWER_FILE" ]; then
+  echo "[durable-request] Timeout waiting for user response."
+  echo "[durable-request] Auto-selected: ${OPTIONS[0]}"
+  echo "${OPTIONS[0]}" > "$ANSWER_FILE"
 fi
 
-# ── 5. Persist answer ───────────────────────────────────────────────────
-echo "$ANSWER" > "$ANSWER_FILE"
-rm -f "$LOCK_FILE"
+# ── 4. Read and return answer ────────────────────────────────────────────
+ANSWER=$(cat "$ANSWER_FILE")
+rm -f "$ANSWER_FILE" "$LOCK_FILE" "$QUESTION_FILE"
 
-# ── 6. Resume Cursor TUI ────────────────────────────────────────────────
-if [ -n "$CURSOR_PID" ]; then
-  if [ -n "$SAVED_STTY" ]; then
-    stty "$SAVED_STTY" < /dev/tty 2>/dev/null || true
-  fi
-  kill -CONT "$CURSOR_PID" 2>/dev/null || true
-fi
-
-echo "" > "$TTY" 2>/dev/null || true
-
-# ── 7. Output to agent (stdout) ─────────────────────────────────────────
 echo "[durable-request] User responded: $ANSWER"
