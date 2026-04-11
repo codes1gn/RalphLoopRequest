@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **TodoWrite Guardrail**: Added `TodoWrite` as a structural anchor to reinforce checkpoint discipline and improve system stability
 - **Conversational Fallback Removed**: Checkpoints now require structured tool calls
 - **Single-Question Checkpoint**: Consolidated from 2 questions to 1, with mandatory freeform last option (`custom`)
+- **Always-On Mode**: Removed the "pure informational Q&A" exception; checkpoints now fire on every task completion with zero exceptions
 - **Stress Test CLI** (`harness/checkpoint_cli.py`): Mock testing tool for automated subagent-driven stress testing
 
 ### Stress Test Results (3 metrics, 600 total steps)

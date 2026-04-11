@@ -18,8 +18,9 @@ This applies to:
 - Debugging sessions
 - Configuration changes
 - ANY work that produces output or side effects
+- Pure informational Q&A (e.g., "What does git rebase do?")
 
-The ONLY exception: pure informational Q&A with no action taken (e.g., "What does git rebase do?").
+**No exceptions. No silent completions. Always checkpoint.**
 </EXTREMELY-IMPORTANT>
 
 ## Checkpoint Mechanism
