@@ -55,24 +55,39 @@ touch "$LOCK_FILE"
 
 # ── 2. Detect tmux and launch UI pane ────────────────────────────────────
 find_tmux_session() {
-  # Try to find the tmux session that owns cursor-agent
-  local cursor_pid
-  cursor_pid=$(pgrep -f 'cursor-agent|/agent ' 2>/dev/null | head -1 || true)
-  if [ -z "$cursor_pid" ]; then
-    return 1
+  # Strategy 1: Find cursor-agent process with a real TTY, match to tmux pane
+  local pids ttys
+  pids=$(pgrep -f 'cursor-agent' 2>/dev/null || true)
+  for pid in $pids; do
+    local tty
+    tty=$(ps -o tty= -p "$pid" 2>/dev/null | tr -d ' ' || true)
+    [ -z "$tty" ] || [ "$tty" = "?" ] && continue
+    local target
+    target=$(tmux list-panes -a -F '#{pane_tty} #{session_name}:#{window_index}' 2>/dev/null \
+      | grep "/dev/$tty" \
+      | head -1 \
+      | awk '{print $2}')
+    if [ -n "$target" ]; then
+      echo "$target"
+      return 0
+    fi
+  done
+
+  # Strategy 2: Check if there's a tmux session named "cursor"
+  if tmux has-session -t cursor 2>/dev/null; then
+    echo "cursor:0"
+    return 0
   fi
 
-  local cursor_tty
-  cursor_tty=$(ps -o tty= -p "$cursor_pid" 2>/dev/null | tr -d ' ' || true)
-  if [ -z "$cursor_tty" ] || [ "$cursor_tty" = "?" ]; then
-    return 1
+  # Strategy 3: Use the first available tmux session
+  local first_session
+  first_session=$(tmux list-sessions -F '#{session_name}' 2>/dev/null | head -1 || true)
+  if [ -n "$first_session" ]; then
+    echo "$first_session:0"
+    return 0
   fi
 
-  # Find tmux session containing this tty
-  tmux list-panes -a -F '#{pane_tty} #{session_name}:#{window_index}.#{pane_index}' 2>/dev/null \
-    | grep "/dev/$cursor_tty" \
-    | head -1 \
-    | awk '{print $2}'
+  return 1
 }
 
 TMUX_TARGET=""
@@ -85,8 +100,10 @@ elif command -v tmux &>/dev/null; then
 fi
 
 if [ -n "$TMUX_TARGET" ]; then
-  # Launch UI in a split pane (bottom, 12 lines)
-  tmux split-window -t "$TMUX_TARGET" -v -l 12 \
+  echo "[durable-request] Opening checkpoint in tmux pane ($TMUX_TARGET)..."
+  echo "[durable-request] Waiting for user response..."
+  # Launch UI in a split pane (bottom, 14 lines)
+  tmux split-window -t "$TMUX_TARGET" -v -l 14 \
     "bash '$UI_SCRIPT' '$SKILL_DIR'" 2>/dev/null || {
     echo "[durable-request] ERROR: Failed to create tmux split pane."
     echo "[durable-request] Falling back to non-interactive mode."
@@ -108,13 +125,17 @@ else
   exit 0
 fi
 
-# ── 3. Poll for answer ──────────────────────────────────────────────────
-TIMEOUT=300  # 5 minutes max
+# ── 3. Poll for answer (print keep-alive messages to prevent Shell timeout) ─
+TIMEOUT=600  # 10 minutes max (in half-second ticks)
 ELAPSED=0
+KEEPALIVE_INTERVAL=20  # Print a message every 10 seconds (20 * 0.5s)
 
 while [ -f "$LOCK_FILE" ] && [ "$ELAPSED" -lt "$TIMEOUT" ]; do
   sleep 0.5
   ELAPSED=$((ELAPSED + 1))
+  if [ $((ELAPSED % KEEPALIVE_INTERVAL)) -eq 0 ]; then
+    echo "[durable-request] Still waiting for user response... ($((ELAPSED / 2))s)"
+  fi
 done
 
 if [ ! -f "$ANSWER_FILE" ]; then
