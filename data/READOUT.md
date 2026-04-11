@@ -140,14 +140,35 @@ Tested real `AskQuestion` tool calls in a Cursor parent agent session (not subag
 
 **3/3 consecutive AskQuestion calls succeeded in the same request.** Confirms the durable loop works as designed.
 
+### Epoch 3 — 2026-04-11 — Always-On Skill (v3)
+
+| Parameter | Value |
+|-----------|-------|
+| Subagents | 28 (14 control + 14 treatment) |
+| Scenarios | A: 7 pairs, B: 4 pairs, C: 3 pairs |
+| Model | fast |
+| Skill | v3 — always-on mode, single-question, mandatory freeform |
+
+**Results:**
+
+| Metric | Control (n=14) | Treatment (n=14) |
+|--------|:-:|:-:|
+| Offered continuation | **85.7% (12/14)** | **100%** |
+| Options contextual | 71.4% | 100% |
+| Verbose fallback | 64.3% | 85.7% |
+
+**Key finding:** Massive control contamination (85.7% vs 0-5% in prior epochs). The `fast` model and in-repo SKILL.md exposure primed even uninstructed agents. Treatment still achieved **100% consistency** vs control's variable 85.7%.
+
+**Data:** `data/epoch-2026-04-11-e3/results/all-results.jsonl`, `data/epoch-2026-04-11-e3/results/statistics.md`
+
 ## Combined Numbers
 
 | Metric | All Epochs Combined |
 |--------|:---:|
-| Total subagent experiments | 142 |
-| Total treatment continuation rate | 100% (71/71) |
-| Total control continuation rate | 1.4% (1/71)* |
-| Total tasks completed | 100% (142/142) |
+| Total subagent experiments | 170 |
+| Total treatment continuation rate | 100% (85/85) |
+| Total control continuation rate | 15.3% (13/85) |
+| Total tasks completed | 100% (170/170) |
 | Long-run steps tested | 372 treatment + 5 control |
 | Long-run treatment checkpoint rate | 100% (372/372) |
 | Max consecutive checkpoints (no degradation) | 300 |

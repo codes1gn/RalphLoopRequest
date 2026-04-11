@@ -68,7 +68,7 @@ In Cursor, this shows up as a clickable UI widget (via `AskQuestion`). In CLI to
 
 ## Quantified Results
 
-Validated across **2 epochs** with **142 total subagent experiments**.
+Validated across **3 epochs** with **170 total subagent experiments**.
 
 ### Epoch 1 — Original Skill (2026-04-07, n=102)
 
@@ -94,18 +94,32 @@ Validated across **2 epochs** with **142 total subagent experiments**.
 
 <sub>*Single control contamination: task required reading SKILL.md, exposing agent to checkpoint instructions.</sub>
 
-### Combined Results (n=162)
+### Epoch 3 — Always-On Skill (2026-04-11, n=28)
+
+<table>
+<tr><th>Metric</th><th>Without Skill</th><th>With Skill</th></tr>
+<tr><td>Offered continuation options</td><td align="center"><strong>85.7%</strong> (12/14)*</td><td align="center"><strong>100%</strong> (14/14)</td></tr>
+<tr><td>Tasks completed successfully</td><td align="center">100%</td><td align="center">100%</td></tr>
+<tr><td>Context-adapted options</td><td align="center">71.4%</td><td align="center">100%</td></tr>
+</table>
+
+<sub>*Massive control contamination: in-repo SKILL.md exposure + model capability primed uninstructed agents. Treatment still 100% consistent.</sub>
+
+### Combined Results (n=170)
 
 | Scenario | Epoch | Control | Treatment |
 |:---------|:-----:|:-------:|:---------:|
 | Code Generation | 1 (n=34) | 0% | 100% |
 | Code Generation | 2 (n=20) | 0% | 100% |
+| Code Generation | 3 (n=14) | 85.7% | 100% |
 | Analysis & Research | 1 (n=34) | 0% | 100% |
 | Analysis & Research | 2 (n=10) | 20%* | 100% |
+| Analysis & Research | 3 (n=8) | 75% | 100% |
 | File Manipulation | 1 (n=34) | 0% | 100% |
 | File Manipulation | 2 (n=10) | 0% | 100% |
+| File Manipulation | 3 (n=6) | 66.7% | 100% |
 
-<sub>*Single contamination from task requiring reading SKILL.md itself.</sub>
+<sub>*Epoch 2: single contamination from task requiring reading SKILL.md. Epoch 3: high control contamination from in-repo skill file exposure.</sub>
 
 > Full data in [`data/`](data/) organized by epoch. Each epoch has its own folder with results, artifacts, and statistics.
 
@@ -294,13 +308,20 @@ durable-request/
     ├── s1/                            # Epoch 1 Scenario 1: Code Generation (34 files)
     ├── s2/                            # Epoch 1 Scenario 2: Analysis & Research (34 files)
     ├── s3/                            # Epoch 1 Scenario 3: File Manipulation (34 files)
-    └── epoch-2026-04-11/              # Epoch 2: Updated skill validation
+    ├── epoch-2026-04-11/              # Epoch 2: Updated skill validation
+    │   ├── results/
+    │   │   ├── all-results.jsonl      # 40 structured results
+    │   │   └── statistics.md          # Statistical analysis
+    │   ├── sA/                        # Code Generation (20 files)
+    │   ├── sB/                        # Analysis & Research (10 files)
+    │   └── sC/                        # File Manipulation (10 files)
+    └── epoch-2026-04-11-e3/           # Epoch 3: Always-on skill validation
         ├── results/
-        │   ├── all-results.jsonl      # 60 structured results
-        │   └── statistics.md          # Statistical analysis with cross-epoch comparison
-        ├── sA/                        # Code Generation (20 files: 10 control + 10 treatment)
-        ├── sB/                        # Analysis & Research (10 files: 5 control + 5 treatment)
-        └── sC/                        # File Manipulation (10 files: 5 control + 5 treatment)
+        │   ├── all-results.jsonl      # 28 structured results
+        │   └── statistics.md          # Statistics + contamination analysis
+        ├── sA/                        # Code Generation (14 pairs)
+        ├── sB/                        # Analysis & Research (8 pairs)
+        └── sC/                        # File Manipulation (6 pairs)
 ```
 
 ---
@@ -320,5 +341,5 @@ Found a platform we should support? Have ideas for better checkpoint options? Op
 ---
 
 <p align="center">
-  <sub>Built with data-driven skill design. Every claim backed by evidence from 142 agent experiments across 2 epochs.</sub>
+  <sub>Built with data-driven skill design. Every claim backed by evidence from 170 agent experiments across 3 epochs.</sub>
 </p>

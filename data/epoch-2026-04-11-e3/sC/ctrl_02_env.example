@@ -1,0 +1,6 @@
+# Example environment variables — copy to .env and fill in values
+DATABASE_URL=
+API_KEY=
+LOG_LEVEL=
+APP_ENV=
+REDIS_URL=

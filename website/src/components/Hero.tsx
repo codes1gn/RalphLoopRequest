@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { CodeEditor } from "./CodeEditor";
+import { PandaLogo } from "./PandaLogo";
 
 const demoConversation = `User:  Add dark mode to my settings page
 
@@ -34,61 +35,80 @@ function ValuePillar({
   badge,
   title,
   points,
+  metrics,
   variant,
 }: {
   icon: React.ReactNode;
   badge: string;
   title: string;
   points: { strong: string; rest: string }[];
+  metrics: { value: string; label: string }[];
   variant: "blue" | "green";
 }) {
-  const styles = {
-    blue: {
-      border: "hover:border-accent-500/30",
-      glow: "bg-accent-500/5 group-hover:bg-accent-500/10",
-      badge: "bg-accent-500/10 text-accent-400",
-      dot: "bg-accent-500",
-    },
-    green: {
-      border: "hover:border-emerald-500/30",
-      glow: "bg-emerald-500/5 group-hover:bg-emerald-500/10",
-      badge: "bg-emerald-500/10 text-emerald-400",
-      dot: "bg-emerald-500",
-    },
-  }[variant];
+  const s = variant === "blue"
+    ? {
+        border: "border-accent-500/20 hover:border-accent-500/40",
+        glow: "bg-accent-500/5 group-hover:bg-accent-500/15",
+        badge: "bg-accent-500/15 text-accent-400",
+        dot: "bg-accent-500",
+        metric: "text-accent-400",
+        ring: "ring-accent-500/20",
+        gradient: "from-accent-500/10 via-transparent to-transparent",
+      }
+    : {
+        border: "border-emerald-500/20 hover:border-emerald-500/40",
+        glow: "bg-emerald-500/5 group-hover:bg-emerald-500/15",
+        badge: "bg-emerald-500/15 text-emerald-400",
+        dot: "bg-emerald-500",
+        metric: "text-emerald-400",
+        ring: "ring-emerald-500/20",
+        gradient: "from-emerald-500/10 via-transparent to-transparent",
+      };
 
   return (
     <div
-      className={`relative rounded-2xl border bg-[var(--card)] p-8 overflow-hidden group ${styles.border} transition-all duration-300`}
+      className={`relative rounded-2xl ${s.border} border bg-[var(--card)] overflow-hidden group transition-all duration-300 hover:shadow-xl hover:shadow-black/10`}
     >
+      <div className={`absolute inset-0 bg-gradient-to-br ${s.gradient} opacity-50`} />
       <div
-        className={`absolute top-0 right-0 w-64 h-64 rounded-full ${styles.glow} blur-3xl -translate-y-1/2 translate-x-1/2 transition-all duration-500`}
+        className={`absolute top-0 right-0 w-72 h-72 rounded-full ${s.glow} blur-3xl -translate-y-1/2 translate-x-1/3 transition-all duration-500`}
       />
 
-      <div className="relative">
+      <div className="relative p-8">
         <div
-          className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full ${styles.badge} text-xs font-semibold mb-5 uppercase tracking-wide`}
+          className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full ${s.badge} text-xs font-semibold mb-5 uppercase tracking-wider`}
         >
           {icon}
           {badge}
         </div>
 
-        <h3 className="text-2xl sm:text-3xl font-bold tracking-tight mb-6">
+        <h3 className="text-2xl sm:text-3xl font-extrabold tracking-tight mb-6">
           {title}
         </h3>
 
-        <div className="space-y-3">
+        <div className="space-y-3 mb-8">
           {points.map((pt, j) => (
             <div key={j} className="flex items-start gap-3">
-              <div
-                className={`mt-1.5 w-1.5 h-1.5 rounded-full ${styles.dot} shrink-0`}
-              />
+              <div className={`mt-1.5 w-2 h-2 rounded-full ${s.dot} shrink-0`} />
               <p className="text-[var(--muted-foreground)] text-sm leading-relaxed">
-                <span className="text-[var(--foreground)] font-medium">
+                <span className="text-[var(--foreground)] font-semibold">
                   {pt.strong}
                 </span>
                 {pt.rest}
               </p>
+            </div>
+          ))}
+        </div>
+
+        <div className={`grid grid-cols-${metrics.length} gap-3 pt-6 border-t border-[var(--border)]`}>
+          {metrics.map((m) => (
+            <div key={m.label} className="text-center">
+              <div className={`text-3xl font-extrabold ${s.metric}`}>
+                {m.value}
+              </div>
+              <div className="text-xs text-[var(--muted-foreground)] mt-1">
+                {m.label}
+              </div>
             </div>
           ))}
         </div>
@@ -110,6 +130,15 @@ export function Hero() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
+            className="mb-6"
+          >
+            <PandaLogo size={72} />
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.05 }}
             className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border bg-[var(--card)] text-sm mb-8"
           >
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -172,24 +201,29 @@ export function Hero() {
           <ValuePillar
             variant="blue"
             icon={
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
                 <polyline points="16 7 22 7 22 13" />
               </svg>
             }
             badge="For Teams & Managers"
-            title="Make Your AI Investment Durable"
+            title="Maximize Cursor Team Plan ROI"
             points={[
               { strong: "Dev at full pace", rest: " — agents work continuously, not one-shot-and-gone" },
-              { strong: "5× more output", rest: " per request with the same token budget" },
-              { strong: "Maximize Cursor Team Plan ROI", rest: " — zero idle agent turns, zero wasted context" },
-              { strong: "Compound productivity", rest: " — each loop iteration builds on everything before it" },
+              { strong: "Longer sessions", rest: " — 5× to 10× more productive cycles per request" },
+              { strong: "Zero wasted context", rest: " — no re-prompting, no lost state between requests" },
+              { strong: "Compound productivity", rest: " — each loop iteration builds on everything before" },
+            ]}
+            metrics={[
+              { value: "5×", label: "Session duration" },
+              { value: "10×", label: "Peak output" },
+              { value: "0", label: "Idle turns" },
             ]}
           />
           <ValuePillar
             variant="green"
             icon={
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5" />
                 <path d="M9 18h6" />
                 <path d="M10 22h4" />
@@ -198,10 +232,15 @@ export function Hero() {
             badge="For Developers"
             title="Reveal the Agent's Black Box"
             points={[
-              { strong: "Fine-grained control", rest: " — steer the agent at every checkpoint, not just the start" },
+              { strong: "Fine-grained control", rest: " — steer the agent at every checkpoint, not just at the start" },
               { strong: "More discussion", rest: " — align on approach before the agent writes 200 wrong lines" },
               { strong: "More feedback loops", rest: " — knowledge aligns incrementally, not retroactively" },
-              { strong: "True peer-coding", rest: " — a real back-and-forth conversation, not a monologue" },
+              { strong: "True peer-coding experience", rest: " — a real back-and-forth, not a monologue" },
+            ]}
+            metrics={[
+              { value: "∞", label: "Checkpoints" },
+              { value: "100%", label: "Adherence" },
+              { value: "0", label: "Silent ends" },
             ]}
           />
         </motion.div>

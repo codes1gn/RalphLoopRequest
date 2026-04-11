@@ -1,0 +1,10 @@
+.PHONY: build test clean
+
+build:
+	@echo "Building..."
+
+test:
+	@echo "Running tests..."
+
+clean:
+	@echo "Cleaning artifacts..."

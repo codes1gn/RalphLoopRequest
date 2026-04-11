@@ -1,0 +1,3 @@
+Python files under harness/:
+
+- checkpoint_cli.py — CLI that simulates AskQuestion-style checkpoints (call/batch), verifies transcripts against the expected markdown checkpoint format, and runs a bundled test suite for durable-request harness testing.
