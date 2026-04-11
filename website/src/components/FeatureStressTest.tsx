@@ -17,7 +17,7 @@ export function FeatureStressTest() {
       }
       title="Proven at Scale"
       subtitle="Stress-Tested to 300+ Steps"
-      description="142 A/B subagent experiments. 672 total treatment steps. Two 300-step consecutive stress tests. Zero degradation over time. Every metric tracked: completion, format correctness, and verbose output presence."
+      description="142 A/B subagent experiments. 672 total treatment steps. Two 300-step stress tests. Plus: 60 CLI checkpoint continuations across 3 response types. Zero degradation anywhere."
     >
       <div className="space-y-6">
         <ScrollReveal delay={0.2}>
@@ -84,6 +84,40 @@ export function FeatureStressTest() {
             <div className="rounded-xl border bg-[var(--card)] p-4 text-center">
               <div className="text-2xl font-bold text-emerald-500">100%</div>
               <div className="text-[10px] text-[var(--muted-foreground)] mt-1">Checkpoint rate</div>
+            </div>
+          </div>
+        </ScrollReveal>
+
+        <ScrollReveal delay={0.4}>
+          <div className="rounded-xl border bg-[var(--card)] overflow-hidden">
+            <div className="px-4 py-3 border-b bg-[var(--muted)] text-xs font-medium text-[var(--muted-foreground)]">
+              CLI Checkpoint Autotest (v1.1.0) — 20 Continuations × 3 Response Types
+            </div>
+            <div className="p-5 space-y-4">
+              {[
+                { label: "continue", pass: 20, total: 20 },
+                { label: "iterate", pass: 20, total: 20 },
+                { label: "done", pass: 20, total: 20 },
+              ].map((row) => (
+                <div key={row.label}>
+                  <div className="flex items-center justify-between text-xs mb-1.5">
+                    <span className="text-[var(--muted-foreground)] font-mono">--auto-respond {row.label}</span>
+                    <span className="font-mono font-semibold text-emerald-500">
+                      {row.pass}/{row.total}
+                    </span>
+                  </div>
+                  <div className="h-3 bg-[var(--muted)] rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-emerald-500 rounded-full transition-all duration-1000"
+                      style={{ width: `${(row.pass / row.total) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="px-5 py-3 border-t bg-[var(--muted)] flex items-center justify-between">
+              <span className="text-xs text-[var(--muted-foreground)]">Total</span>
+              <span className="text-sm font-bold text-emerald-500">60/60 — 100%</span>
             </div>
           </div>
         </ScrollReveal>

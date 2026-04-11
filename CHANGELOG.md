@@ -25,11 +25,16 @@ All notable changes to durable-request are documented here.
 - `set -e` in checkpoint.sh caused silent exit when tmux was unavailable (now gracefully falls back)
 - Terminal rendering (VT100 ACS fallback) when LANG/locale not set to UTF-8
 
+### Automated Testing
+- **20-checkpoint continuation batch test**: 60/60 simulations passed (20×continue, 20×iterate, 20×done = 100% success rate)
+- Fresh install verification in `/tmp` — SKILL.md + checkpoint.sh + checkpoint-ui.sh all validated
+- `checkpoint.sh` graceful fallback without tmux confirmed (exit 0, explicit error messaging)
+- Test harness `test-suite`: 21/23 passed (2 intentional negative cases)
+
 ### Technical Notes
 - Cursor CLI Shell tool runs in sandbox — no `/dev/tty` access, but CAN access tmux via `tmux split-window`
 - File-based IPC: checkpoint.sh writes question, checkpoint-ui.sh writes answer, polling loop bridges them
 - Keep-alive messages every 10s prevent Shell tool timeout during long user response times
-- Install + 20 checkpoint continuation test: all 60 batch simulations passed (20×continue, 20×iterate, 20×done)
 
 ## [1.0.1] - 2026-04-11
 

@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { ScrollReveal } from "../components/ScrollReveal";
 
 interface ChangeEntry {
-  type: "added" | "changed" | "fixed" | "note";
+  type: "added" | "changed" | "fixed" | "note" | "test";
   text: string;
 }
 
@@ -33,8 +33,11 @@ const releases: Release[] = [
       { type: "fixed", text: "set -e in checkpoint.sh caused silent exit when tmux unavailable" },
       { type: "fixed", text: "Terminal rendering (VT100 ACS fallback) when LANG/locale not set to UTF-8" },
       { type: "note", text: "Cursor CLI Shell tool runs in sandbox — no /dev/tty access, but CAN access tmux via tmux split-window" },
+      { type: "test", text: "20-checkpoint continuation batch: 60/60 simulations passed (20×continue, 20×iterate, 20×done = 100%)" },
+      { type: "test", text: "Fresh install verification in /tmp — SKILL.md + checkpoint.sh + checkpoint-ui.sh validated" },
+      { type: "test", text: "checkpoint.sh graceful fallback without tmux confirmed (exit 0, explicit error messaging)" },
+      { type: "test", text: "Test harness test-suite: 21/23 passed (2 intentional negative cases)" },
       { type: "note", text: "File-based IPC: checkpoint.sh writes question, checkpoint-ui.sh writes answer, polling loop bridges them" },
-      { type: "note", text: "Install + 20-checkpoint continuation test: all 60 batch simulations passed (20×continue, 20×iterate, 20×done)" },
     ],
   },
   {
@@ -67,6 +70,7 @@ const typeBadge: Record<ChangeEntry["type"], { label: string; className: string 
   changed: { label: "Changed", className: "bg-amber-500/15 text-amber-400" },
   fixed:   { label: "Fixed",   className: "bg-rose-500/15 text-rose-400" },
   note:    { label: "Note",    className: "bg-sky-500/15 text-sky-400" },
+  test:    { label: "Test",    className: "bg-violet-500/15 text-violet-400" },
 };
 
 export function Changelog() {
