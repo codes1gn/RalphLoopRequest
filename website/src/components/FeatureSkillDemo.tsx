@@ -17,7 +17,7 @@ Agent: [durable-request] Refactoring complete.
        Called AskQuestion — checkpoint presented.
 
        ┌───────────────────────────────────────┐
-       │  ✅ Auth module refactored.            │
+       │  Auth module refactored.               │
        │  What would you like to do next?       │
        │                                        │
        │  ○ Run the test suite                  │
@@ -27,7 +27,30 @@ Agent: [durable-request] Refactoring complete.
        │  ○ I'll type my own instruction        │
        └───────────────────────────────────────┘
 
-       ↻ Same request. Full context preserved.`;
+       Same request. Full context preserved.`;
+
+const withCLI = `$ cursor-agent  (inside tmux)
+
+Agent: [Shell] bash checkpoint.sh "Auth refactored"
+       [durable-request] Opening checkpoint in tmux...
+
+  ┌── Cursor Agent CLI ────────────────────┐
+  │  > Refactored auth module, 3 files...  │
+  │  > [Shell: waiting for checkpoint...]  │
+  ├── [durable-request] Checkpoint ────────┤
+  │                                        │
+  │   Auth module refactored. What next?   │
+  │                                        │
+  │    1. Run the test suite               │
+  │    2. Review the diff                  │
+  │    3. Done                             │
+  │    4. I'll type my own instruction     │
+  │                                        │
+  │   > Choice: 1                          │
+  └────────────────────────────────────────┘
+
+Agent: [durable-request] User responded: Run tests
+       Running pytest... All 42 tests passed.`;
 
 export function FeatureSkillDemo() {
   return (
@@ -42,7 +65,7 @@ export function FeatureSkillDemo() {
       }
       title="One File. Infinite Loops."
       subtitle="Skill-Powered Checkpoints"
-      description="Drop a single SKILL.md into your project. The agent reads it, internalizes the rules, and never ends silently again. Every task completion becomes an interactive checkpoint."
+      description="Drop a single SKILL.md into your project. The agent reads it, internalizes the rules, and never ends silently again. Every task completion becomes an interactive checkpoint — in the editor, CLI, or anywhere."
     >
       <div className="space-y-4">
         <ScrollReveal delay={0.2}>
@@ -61,11 +84,24 @@ export function FeatureSkillDemo() {
         <ScrollReveal delay={0.3}>
           <div className="relative">
             <div className="absolute -top-2 left-3 px-2 py-0.5 bg-emerald-500 text-white text-xs font-semibold rounded z-10">
-              With durable-request
+              With durable-request (Editor)
             </div>
-            <CodeEditor filename="after.session">
+            <CodeEditor filename="cursor-editor.session">
               <pre className="text-[var(--foreground)] text-xs">
                 <code>{withSkill}</code>
+              </pre>
+            </CodeEditor>
+          </div>
+        </ScrollReveal>
+
+        <ScrollReveal delay={0.4}>
+          <div className="relative">
+            <div className="absolute -top-2 left-3 px-2 py-0.5 bg-cyan-500 text-white text-xs font-semibold rounded z-10">
+              With durable-request (CLI + tmux)
+            </div>
+            <CodeEditor filename="cursor-cli.session">
+              <pre className="text-[var(--foreground)] text-xs">
+                <code>{withCLI}</code>
               </pre>
             </CodeEditor>
           </div>

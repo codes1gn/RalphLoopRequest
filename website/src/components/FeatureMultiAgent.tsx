@@ -25,10 +25,10 @@ const platforms = [
   },
   {
     name: "Cursor CLI",
-    tool: "—",
-    status: "wip",
-    statusLabel: "WIP",
-    desc: "CLI environment detection with conversational fallback",
+    tool: "checkpoint.sh",
+    status: "active",
+    statusLabel: "Active",
+    desc: "Tmux split-pane interactive checkpoint — true blocking durable loop via Shell",
   },
 ];
 
@@ -44,7 +44,7 @@ export function FeatureMultiAgent() {
       }
       title="Works Everywhere"
       subtitle="Multi-Agent Compatibility"
-      description="Auto-detects your environment and uses the right tool. One SKILL.md, four platforms. Falls back gracefully with verbose reporting when interactive tools aren't available."
+      description="Auto-detects your environment and uses the right tool. One SKILL.md, all platforms — including Cursor CLI with true blocking checkpoints via tmux split panes."
       reversed
     >
       <div className="space-y-3">

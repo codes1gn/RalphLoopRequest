@@ -5,7 +5,7 @@ export function Footer() {
         <div className="flex items-center gap-2">
           <span className="text-lg">🔄</span>
           <span>durable-request</span>
-          <span className="text-xs px-1.5 py-0.5 rounded bg-[var(--muted)]">v1.0.1</span>
+          <span className="text-xs px-1.5 py-0.5 rounded bg-[var(--muted)]">v1.1.0</span>
         </div>
         <div className="flex items-center gap-6">
           <a
