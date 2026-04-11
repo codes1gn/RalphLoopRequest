@@ -66,14 +66,32 @@ chmod +x ~/.cursor/skills/durable-request/checkpoint.sh
 chmod +x ~/.cursor/skills/durable-request/checkpoint-ui.sh
 ```
 
-### 3c: Set up tmux alias (recommended)
+### 3c: Set up tmux + locale (required for Cursor CLI)
 
-Add this alias to `~/.bashrc` so `cursor-agent` automatically runs inside tmux:
+Add these to `~/.bashrc`:
 
 ```bash
-echo "alias cursor-agent='tmux new-session -A -s cursor -- cursor-agent'" >> ~/.bashrc
+cat >> ~/.bashrc << 'BASHEOF'
+# UTF-8 locale for proper terminal rendering
+export LANG=en_US.UTF-8
+export LC_ALL=en_US.UTF-8
+
+# Run cursor-agent inside tmux for interactive checkpoints
+alias cursor-agent='tmux new-session -A -s cursor -- cursor-agent'
+BASHEOF
 source ~/.bashrc
 ```
+
+Set the tmux terminal type for proper Unicode support:
+
+```bash
+cat >> ~/.tmux.conf << 'TMUXEOF'
+set -g default-terminal "tmux-256color"
+set -gq utf8 on
+TMUXEOF
+```
+
+If tmux is already running, kill it so it picks up the new config: `tmux kill-server`
 
 ### 3d: Clean up
 
