@@ -139,7 +139,7 @@ export function Hero() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.05 }}
-            className="text-2xl sm:text-3xl font-extrabold tracking-tight mb-3 text-gradient"
+            className="text-5xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight mb-3 text-gradient"
           >
             DurableRequest
           </motion.div>
