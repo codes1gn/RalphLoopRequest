@@ -53,7 +53,7 @@ export function Navbar() {
               location.pathname === "/cli-session" ? "text-[var(--foreground)] font-semibold" : ""
             }`}
           >
-            CLI Demo
+            The CLI Plugin Design
           </Link>
           <a
             href={REPO_URL}

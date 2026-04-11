@@ -6,9 +6,9 @@
 </p>
 
 <p align="center">
-  <a href="https://git.enflame.cn/heng.shi/DurableRequest/blob/main/LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg"></a>
-  <a href="https://git.enflame.cn/heng.shi/DurableRequest"><img alt="Stars" src="https://img.shields.io/badge/Stars-0-blue"></a>
-  <a href="https://git.enflame.cn/heng.shi/DurableRequest/-/issues"><img alt="Issues" src="https://img.shields.io/badge/Issues-0-red"></a>
+  <a href="http://git.enflame.cn/skills/durablerequest/-/blob/main/LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg"></a>
+  <a href="http://git.enflame.cn/skills/durablerequest"><img alt="Stars" src="https://img.shields.io/badge/Stars-0-blue"></a>
+  <a href="http://git.enflame.cn/skills/durablerequest/-/issues"><img alt="Issues" src="https://img.shields.io/badge/Issues-0-red"></a>
 </p>
 
 <p align="center">
@@ -133,7 +133,7 @@ Paste this into any AI agent chat — it will install itself:
 
 ```
 Install durable-request by following the instructions at:
-https://git.enflame.cn/skills/DurableRequest/-/raw/main/install.md
+http://git.enflame.cn/skills/durablerequest/-/raw/main/install.md
 ```
 
 The agent fetches the install guide and handles everything: downloading the skill file, creating directories, and copying to all 9 platform locations at both project and personal scope.
@@ -142,7 +142,7 @@ The agent fetches the install guide and handles everything: downloading the skil
 
 ```bash
 mkdir -p ~/.cursor/skills/durable-request && \
-curl -sL "https://git.enflame.cn/skills/DurableRequest/-/raw/main/skill/SKILL.md" \
+curl -sL "http://git.enflame.cn/skills/durablerequest/-/raw/main/skill/SKILL.md" \
   -o ~/.cursor/skills/durable-request/SKILL.md
 ```
 
@@ -366,7 +366,7 @@ Found a platform we should support? Have ideas for better checkpoint options? Op
 
 ## Author
 
-**heng.shi** / [@heng.shi](https://git.enflame.cn/heng.shi)
+**Heng Shi** / [@heng.shi](http://git.enflame.cn/heng.shi)
 
 ---
 

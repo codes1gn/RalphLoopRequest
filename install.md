@@ -14,7 +14,7 @@ Two components:
 Download the skill file from the repository:
 
 ```bash
-curl -sL "https://git.enflame.cn/heng.shi/DurableRequest/-/raw/main/skill/SKILL.md" \
+curl -sL "http://git.enflame.cn/skills/durablerequest/-/raw/main/skill/SKILL.md" \
   -o /tmp/durable-request-SKILL.md
 ```
 
@@ -51,9 +51,9 @@ The CLI checkpoint tool enables true blocking interactive checkpoints in Cursor 
 ### 3a: Download the checkpoint scripts
 
 ```bash
-curl -sL "https://git.enflame.cn/heng.shi/DurableRequest/-/raw/main/skill/checkpoint.sh" \
+curl -sL "http://git.enflame.cn/skills/durablerequest/-/raw/main/skill/checkpoint.sh" \
   -o /tmp/durable-checkpoint.sh
-curl -sL "https://git.enflame.cn/heng.shi/DurableRequest/-/raw/main/skill/checkpoint-ui.sh" \
+curl -sL "http://git.enflame.cn/skills/durablerequest/-/raw/main/skill/checkpoint-ui.sh" \
   -o /tmp/durable-checkpoint-ui.sh
 ```
 

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
 durable-request checkpoint CLI — tool for subagent-driven testing.
+Author: Heng Shi
 
 Simulates the AskQuestion checkpoint flow so subagents can verify
 checkpoint behavior through Shell tool calls.

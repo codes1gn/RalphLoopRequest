@@ -2,6 +2,8 @@
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # durable-request checkpoint — interactive CLI checkpoint via tmux split pane
 #
+# Author: Heng Shi <heng.shi@enflame-tech.com>
+#
 # Called by the agent via the Shell tool. Creates a tmux split pane where
 # the user selects their next action, then returns their choice to the agent.
 #

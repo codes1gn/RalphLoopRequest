@@ -1,5 +1,6 @@
 ---
 name: durable-request
+author: Heng Shi <heng.shi@enflame-tech.com>
 description: Universal end-of-task continuation gate. Forces every agent turn that completes work to present an interactive checkpoint (AskQuestion or conversational) instead of silently finishing. Applies to ALL tasks — coding, writing, debugging, research, analysis, refactoring, any prompt. Use always, on every task completion, before ending any turn where work was performed.
 ---
 

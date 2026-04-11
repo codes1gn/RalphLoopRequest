@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# durable-request checkpoint UI - runs inside a tmux split pane
+# durable-request checkpoint UI — runs inside a tmux split pane
+# Author: Heng Shi
 
 set -euo pipefail
 
