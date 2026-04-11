@@ -72,12 +72,13 @@ Detect your environment and attempt the appropriate interactive tool. **Always t
 
 | Priority | Signal | Environment | Action |
 |:--------:|--------|------------|--------|
-| 1 | `AskQuestion` is in your tool list | Cursor editor | Call `AskQuestion` |
+| 1 | `AskQuestion` is in your tool list | Cursor editor / CLI | Call `AskQuestion` first |
 | 2 | `AskUserQuestion` is in your tool list | Claude Code | Call `AskUserQuestion` |
 | 3 | `question` is in your tool list | OpenCode | Call `question` |
-| 4 | You have `Shell` but NOT `AskQuestion` | Cursor CLI | Call `checkpoint.sh` via Shell |
-| 5 | Your context starts with a Task tool prompt | Subagent | Conversational fallback |
-| 6 | None of the above | Other CLI | Conversational fallback |
+| 4 | Your context starts with a Task tool prompt | Subagent | Conversational fallback |
+| 5 | None of the above | Other CLI | Conversational fallback |
+
+**IMPORTANT: If `AskQuestion` fails or is interrupted, AND you have `Shell` access, try `checkpoint.sh` as a secondary checkpoint before falling back to conversational.** This is the expected path in Cursor CLI where `AskQuestion` is listed but does not work.
 
 #### Cursor Editor (Parent Agent): Call `AskQuestion`
 
@@ -165,6 +166,19 @@ For `checkpoint.sh` (CLI): The output contains `[durable-request] User responded
 
 Then execute the user's selected action. After completing it, loop back to Step 1 (register new checkpoint todo → checkpoint again → ...). Continue until the user selects "done."
 
+#### If `AskQuestion` FAILED or was INTERRUPTED:
+
+**Do NOT go straight to conversational fallback.** If you have `Shell` access, try `checkpoint.sh` first:
+
+```bash
+bash ~/.cursor/skills/durable-request/checkpoint.sh \
+  "<same prompt>" "<option 1>" "<option 2>" ... "Done"
+```
+
+If `checkpoint.sh` also fails (no tmux), THEN present conversational fallback.
+
+> **[durable-request]** `AskQuestion` failed/interrupted. Trying `checkpoint.sh` via Shell...
+
 #### If `checkpoint.sh` FAILED (no tmux / error):
 
 The script prints setup instructions and falls back with auto-selected first option. Tell the user:
@@ -213,15 +227,18 @@ The key insight: calling `TodoWrite` and the checkpoint **together in the same t
 │    status: "in_progress"               })                  │
 │  }])                                                        │
 │                                                             │
-│  In CLI: TodoWrite + Shell(checkpoint.sh) in same batch.   │
-│  checkpoint.sh blocks until user responds.                  │
-│                                                             │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-- If `AskQuestion` succeeds → it blocks the turn, user responds, you mark the todo complete and continue.
-- If `checkpoint.sh` succeeds (CLI) → Shell blocks until user responds, you read the output and continue.
-- If both fail → the todo remains `in_progress`, which prevents you from ending silently. Present the conversational fallback and then mark it complete.
+**Cascade on failure (ALWAYS follow this order):**
+
+1. `AskQuestion` succeeds → blocks turn, user responds, mark todo complete, continue
+2. `AskQuestion` fails/interrupted → **try `checkpoint.sh` via Shell** (if Shell available)
+3. `checkpoint.sh` succeeds → Shell blocks, user responds in tmux pane, continue
+4. `checkpoint.sh` fails (no tmux) → present conversational fallback, mark todo complete
+5. No Shell access (subagent) → conversational fallback immediately
+
+**Never skip step 2.** If `AskQuestion` fails in Cursor CLI, `checkpoint.sh` is the designed solution.
 
 This is **not optional**. Always pair TodoWrite with the checkpoint.
 
