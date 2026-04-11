@@ -263,13 +263,13 @@ A CLI harness is included for automated testing of checkpoint format and reliabi
 
 ```bash
 # Run the full test suite
-python3 harness/checkpoint_harness.py test-suite
+python3 harness/checkpoint_cli.py test-suite
 
 # Simulate 20 consecutive checkpoints
-python3 harness/checkpoint_harness.py batch --count 20 --auto-respond continue
+python3 harness/checkpoint_cli.py batch --count 20 --auto-respond continue
 
 # Verify a transcript file matches the checkpoint format
-python3 harness/checkpoint_harness.py verify --file output.txt
+python3 harness/checkpoint_cli.py verify --file output.txt
 ```
 
 ---
@@ -283,7 +283,7 @@ durable-request/
 ├── skill/
 │   └── SKILL.md                       # The skill (copy to install)
 ├── harness/
-│   └── checkpoint_harness.py          # CLI tool for automated checkpoint testing
+│   └── checkpoint_cli.py          # CLI tool for automated checkpoint testing
 └── data/
     ├── all-results.jsonl              # Epoch 1: 102 structured A/B test results
     ├── final-statistics.md            # Epoch 1: Statistical analysis

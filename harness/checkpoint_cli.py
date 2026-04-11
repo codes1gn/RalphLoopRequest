@@ -1,25 +1,25 @@
 #!/usr/bin/env python3
 """
-durable-request checkpoint harness — CLI tool for subagent-driven testing.
+durable-request checkpoint CLI — tool for subagent-driven testing.
 
 Simulates the AskQuestion checkpoint flow so subagents can verify
 checkpoint behavior through Shell tool calls.
 
 Usage:
     # Simulate a checkpoint call (auto-responds with a preset answer)
-    python checkpoint_harness.py call \
+    python checkpoint_cli.py call \
         --summary "Added factorial function" \
         --options "Run tests,Iterate,Commit,Done" \
         --auto-respond iterate
 
     # Verify a checkpoint transcript matches the spec
-    python checkpoint_harness.py verify --file transcript.txt
+        python checkpoint_cli.py verify --file transcript.txt
 
-    # Run a batch of N consecutive checkpoint simulations
-    python checkpoint_harness.py batch --count 10 --auto-respond iterate
+        # Run a batch of N consecutive checkpoint simulations
+        python checkpoint_cli.py batch --count 10 --auto-respond iterate
 
-    # Run the full reliability test suite
-    python checkpoint_harness.py test-suite
+        # Run the full reliability test suite
+        python checkpoint_cli.py test-suite
 """
 
 import argparse
@@ -222,7 +222,7 @@ TASK_CONTEXTS = {
 
 def cmd_test_suite(args):
     print("=" * 60)
-    print("durable-request checkpoint harness — test suite")
+    print("durable-request checkpoint CLI — test suite")
     print("=" * 60)
 
     all_results = []
@@ -343,7 +343,7 @@ Let me know if you need anything else."""
 
 def main():
     parser = argparse.ArgumentParser(
-        description="durable-request checkpoint harness",
+        description="durable-request checkpoint CLI",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=__doc__
     )

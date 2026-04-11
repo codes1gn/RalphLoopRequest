@@ -13,7 +13,7 @@ A prompt-only skill (no runtime, no code, no dependencies) that prevents AI agen
 ```
 durable-request/
 ├── skill/SKILL.md                     ← THE SKILL (install this file)
-├── harness/checkpoint_harness.py      ← CLI tool for automated testing
+├── harness/checkpoint_cli.py           ← CLI tool for automated testing
 ├── install.md                         ← Agent-readable install guide
 ├── data/
 │   ├── READOUT.md                     ← THIS FILE
