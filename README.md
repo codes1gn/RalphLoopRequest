@@ -68,7 +68,9 @@ In Cursor, this shows up as a clickable UI widget (via `AskQuestion`). In CLI to
 
 ## Quantified Results
 
-We validated this skill with a rigorous A/B test: **102 subagents** across 3 task categories.
+Validated across **2 epochs** with **142 total subagent experiments**.
+
+### Epoch 1 — Original Skill (2026-04-07, n=102)
 
 <table>
 <tr><th>Metric</th><th>Without Skill</th><th>With Skill</th></tr>
@@ -77,20 +79,35 @@ We validated this skill with a rigorous A/B test: **102 subagents** across 3 tas
 <tr><td>Context-adapted options</td><td align="center">N/A</td><td align="center">100%</td></tr>
 <tr><td>Fisher's exact test</td><td align="center">-</td><td align="center"><code>p < 2.2e-16</code></td></tr>
 <tr><td>Effect size (Cohen's h)</td><td align="center">-</td><td align="center"><strong>3.14 (maximum)</strong></td></tr>
-<tr><td>Number needed to treat</td><td align="center">-</td><td align="center"><strong>1.0</strong></td></tr>
 </table>
 
-**Zero control agents spontaneously offered continuation.** The skill converts 100% of endings from silent to interactive, with no impact on task quality.
+### Epoch 2 — Updated Skill with TodoWrite Reinforcement (2026-04-11, n=40)
 
-### Test Coverage
+<table>
+<tr><th>Metric</th><th>Without Skill</th><th>With Skill</th></tr>
+<tr><td>Offered continuation options</td><td align="center"><strong>5%</strong> (1/20)*</td><td align="center"><strong>100%</strong> (20/20)</td></tr>
+<tr><td>Tasks completed successfully</td><td align="center">100%</td><td align="center">100%</td></tr>
+<tr><td>Context-adapted options</td><td align="center">5%*</td><td align="center">100%</td></tr>
+<tr><td>Verbose fallback message</td><td align="center">5%*</td><td align="center">85% (actual)</td></tr>
+<tr><td>Effect size (Cohen's h)</td><td align="center">-</td><td align="center"><strong>2.69</strong></td></tr>
+</table>
 
-| Scenario | Tasks | Control | Treatment |
+<sub>*Single control contamination: task required reading SKILL.md, exposing agent to checkpoint instructions.</sub>
+
+### Combined Results (n=162)
+
+| Scenario | Epoch | Control | Treatment |
 |:---------|:-----:|:-------:|:---------:|
-| Code Generation | 17 | 0% continuation | 100% continuation |
-| Analysis & Research | 17 | 0% continuation | 100% continuation |
-| File Manipulation | 17 | 0% continuation | 100% continuation |
+| Code Generation | 1 (n=34) | 0% | 100% |
+| Code Generation | 2 (n=20) | 0% | 100% |
+| Analysis & Research | 1 (n=34) | 0% | 100% |
+| Analysis & Research | 2 (n=10) | 20%* | 100% |
+| File Manipulation | 1 (n=34) | 0% | 100% |
+| File Manipulation | 2 (n=10) | 0% | 100% |
 
-> Full data and analysis available in [`data/`](data/).
+<sub>*Single contamination from task requiring reading SKILL.md itself.</sub>
+
+> Full data in [`data/`](data/) organized by epoch. Each epoch has its own folder with results, artifacts, and statistics.
 
 ---
 
@@ -153,6 +170,26 @@ Layer 1: AskQuestion tool          Layer 2: Conversational fallback    Layer 3: 
                                      5. Done                           
 ```
 
+### Cursor Agent: The Durable Loop
+
+In Cursor's agent mode, `AskQuestion` is a built-in tool that **pauses the agent's turn without ending the request**. The user responds through a structured UI widget, and the agent continues in the same request context. This creates a true durable loop — multiple tasks completed in a single billed request:
+
+```
+┌─────────────────────────────────────────────────┐
+│                  Single Request                  │
+│                                                  │
+│  ┌──────────┐    ┌────────────┐    ┌──────────┐ │
+│  │ Do Work  │───▶│ AskQuestion│───▶│ User     │ │
+│  │          │    │ (blocks)   │    │ Responds │ │
+│  └──────────┘    └────────────┘    └─────┬────┘ │
+│       ▲                                  │      │
+│       │          "done" ──────────▶ END  │      │
+│       └──────── anything else ◀──────────┘      │
+└─────────────────────────────────────────────────┘
+```
+
+**Note:** Subagents (launched via the `Task` tool) do NOT have access to `AskQuestion`. The skill automatically falls back to conversational checkpoints in subagent contexts.
+
 The skill **adapts its options contextually** based on what was just completed:
 
 | After... | Options include |
@@ -164,6 +201,16 @@ The skill **adapts its options contextually** based on what was just completed:
 | File operations | Verify output, Modify format, Additional ops |
 
 ---
+
+## Platform-Specific Behavior
+
+| Platform | Checkpoint Tool | Behavior | Tested |
+|:---------|:---------------|:---------|:------:|
+| Cursor (parent agent) | `AskQuestion` | Pauses turn, UI widget, same request | Yes |
+| Cursor (subagent) | Conversational fallback | Numbered text options | Yes (A/B) |
+| Claude Code | `AskUserQuestion` | Pauses turn, same request | Yes |
+| OpenCode | `question` | Pauses turn, same request | Compatible |
+| CLI / other | Conversational fallback | Numbered text options | Yes (A/B) |
 
 ## Integration with Existing Skills
 
@@ -184,21 +231,45 @@ Skills with their own continuation logic (tuning sweeps, FSM engines, etc.) take
 The full experimental methodology is documented in [`data/session-history-meta-prompt.md`](data/session-history-meta-prompt.md):
 
 - Exact prompt templates for control and treatment groups
-- All 51 task descriptions across 3 scenarios
+- All task descriptions across 3 scenarios
 - Statistical analysis methodology
 - A **reusable template** for A/B testing any agent skill
 
 ```bash
-# Quick verification — parse all 102 results
+# Quick verification — parse Epoch 1 results (102 agents)
 cat data/all-results.jsonl | python3 -c "
 import json, sys
 results = [json.loads(l) for l in sys.stdin]
 control = [r for r in results if r['group'] == 'control']
 treatment = [r for r in results if r['group'] == 'treatment']
-print(f'Control offered continuation: {sum(r[\"offered_continuation\"] for r in control)}/{len(control)}')
-print(f'Treatment offered continuation: {sum(r[\"offered_continuation\"] for r in treatment)}/{len(treatment)}')
+print(f'Epoch 1 - Control: {sum(r[\"offered_continuation\"] for r in control)}/{len(control)}')
+print(f'Epoch 1 - Treatment: {sum(r[\"offered_continuation\"] for r in treatment)}/{len(treatment)}')
 "
-# Output: Control 0/51, Treatment 51/51
+
+# Parse Epoch 2 results (60 agents)
+cat data/epoch-2026-04-11/results/all-results.jsonl | python3 -c "
+import json, sys
+results = [json.loads(l) for l in sys.stdin]
+control = [r for r in results if r['group'] == 'control']
+treatment = [r for r in results if r['group'] == 'treatment']
+print(f'Epoch 2 - Control: {sum(r[\"offered_continuation\"] for r in control)}/{len(control)}')
+print(f'Epoch 2 - Treatment: {sum(r[\"offered_continuation\"] for r in treatment)}/{len(treatment)}')
+"
+```
+
+### Checkpoint Harness
+
+A CLI harness is included for automated testing of checkpoint format and reliability:
+
+```bash
+# Run the full test suite
+python3 harness/checkpoint_harness.py test-suite
+
+# Simulate 20 consecutive checkpoints
+python3 harness/checkpoint_harness.py batch --count 20 --auto-respond continue
+
+# Verify a transcript file matches the checkpoint format
+python3 harness/checkpoint_harness.py verify --file output.txt
 ```
 
 ---
@@ -211,16 +282,25 @@ durable-request/
 ├── install.md                         # LLM-readable installation guide
 ├── skill/
 │   └── SKILL.md                       # The skill (copy to install)
+├── harness/
+│   └── checkpoint_harness.py          # CLI tool for automated checkpoint testing
 └── data/
-    ├── all-results.jsonl              # 102 structured A/B test results
-    ├── final-statistics.md            # Statistical analysis (Fisher's, Cohen's h, CIs)
-    ├── experiment-design.md           # Full design with all 51 prompts
+    ├── all-results.jsonl              # Epoch 1: 102 structured A/B test results
+    ├── final-statistics.md            # Epoch 1: Statistical analysis
+    ├── experiment-design.md           # Full design with all prompts
     ├── session-history-meta-prompt.md # Methodology + reusable A/B template
     ├── ab-test-raw-results.md         # Pilot test (n=6) transcripts
     ├── ab-test-statistics.md          # Pilot test statistics
-    ├── s1/                            # Scenario 1: Code Generation (34 files)
-    ├── s2/                            # Scenario 2: Analysis & Research (34 files)
-    └── s3/                            # Scenario 3: File Manipulation (34 files)
+    ├── s1/                            # Epoch 1 Scenario 1: Code Generation (34 files)
+    ├── s2/                            # Epoch 1 Scenario 2: Analysis & Research (34 files)
+    ├── s3/                            # Epoch 1 Scenario 3: File Manipulation (34 files)
+    └── epoch-2026-04-11/              # Epoch 2: Updated skill validation
+        ├── results/
+        │   ├── all-results.jsonl      # 60 structured results
+        │   └── statistics.md          # Statistical analysis with cross-epoch comparison
+        ├── sA/                        # Code Generation (20 files: 10 control + 10 treatment)
+        ├── sB/                        # Analysis & Research (10 files: 5 control + 5 treatment)
+        └── sC/                        # File Manipulation (10 files: 5 control + 5 treatment)
 ```
 
 ---
@@ -240,5 +320,5 @@ Found a platform we should support? Have ideas for better checkpoint options? Op
 ---
 
 <p align="center">
-  <sub>Built with data-driven skill design. Every claim backed by evidence from 102 agent experiments.</sub>
+  <sub>Built with data-driven skill design. Every claim backed by evidence from 142 agent experiments across 2 epochs.</sub>
 </p>

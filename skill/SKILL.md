@@ -24,56 +24,121 @@ The ONLY exception: pure informational Q&A with no action taken (e.g., "What doe
 
 ## Checkpoint Mechanism
 
-### Primary: Interactive UI Tool (Cursor, Claude Code, OpenCode)
+### Step 1: Anchor Checkpoint Intent with TodoWrite
 
-Use the available interactive tool for your environment:
+Before attempting ANY interactive tool, **always call `TodoWrite` first** (or the equivalent task-tracking tool in your environment) to register the checkpoint as an unfinished obligation:
 
-- **Cursor**: `AskQuestion` tool
-- **Claude Code**: `AskUserQuestion` tool  
-- **OpenCode**: `question` tool
+```
+TodoWrite([
+  { id: "durable-checkpoint", content: "Present interactive checkpoint to user", status: "in_progress" },
+  ... (keep any existing todos)
+])
+```
 
-When available, use it:
+This serves two purposes:
+1. **Structural anchor**: The todo list now shows an incomplete item. You cannot end your turn with an `in_progress` todo — it forces you to resolve it.
+2. **Audit trail**: If the interactive tool fails or is unavailable, the todo makes the failure visible rather than silent.
+
+**After the user responds to the checkpoint**, mark it complete:
+```
+TodoWrite([
+  { id: "durable-checkpoint", status: "completed" }
+])
+```
+
+### Step 2: Attempt the Interactive Tool
+
+Detect your environment and attempt the appropriate interactive tool. **Always try the tool first. Report the outcome explicitly.**
+
+#### Environment Detection
+
+| Signal | Environment | Interactive Tool |
+|--------|------------|-----------------|
+| You have `AskQuestion` in your tool list | Cursor parent agent | `AskQuestion` |
+| You have `AskUserQuestion` in your tool list | Claude Code | `AskUserQuestion` |
+| You have `question` in your tool list | OpenCode | `question` |
+| Your context starts with a Task tool prompt | Cursor/Claude subagent | None — fallback |
+| None of the above tools exist | CLI / other | None — fallback |
+
+#### Cursor Parent Agent: Call `AskQuestion`
+
+Call `AskQuestion` with these parameters:
 
 ```json
 {
   "title": "Task Checkpoint",
-  "questions": [{
-    "id": "next_action",
-    "prompt": "<1-2 sentence summary of what was completed>. What would you like to do next?",
-    "options": [
-      {"id": "iterate",   "label": "Iterate / refine what was just done"},
-      {"id": "continue",  "label": "Continue to the next step"},
-      {"id": "review",    "label": "Review the changes in detail"},
-      {"id": "different", "label": "Switch to a different task"},
-      {"id": "done",      "label": "I'm satisfied, we're done"}
-    ]
-  },
-  {
-    "id": "freeform",
-    "prompt": "Or type your own instruction:",
-    "options": [
-      {"id": "skip", "label": "(skip — use the selection above instead)"}
-    ]
-  }]
+  "questions": [
+    {
+      "id": "next_action",
+      "prompt": "<1-2 sentence summary of what was completed>. What would you like to do next?",
+      "options": [
+        {"id": "iterate",   "label": "Iterate / refine what was just done"},
+        {"id": "continue",  "label": "Continue to the next step"},
+        {"id": "review",    "label": "Review the changes in detail"},
+        {"id": "different", "label": "Switch to a different task"},
+        {"id": "done",      "label": "I'm satisfied, we're done"}
+      ],
+      "allow_multiple": false
+    },
+    {
+      "id": "freeform",
+      "prompt": "Or describe what you'd like to do next:",
+      "options": [
+        {"id": "skip", "label": "Skip — use the selection above instead"},
+        {"id": "custom", "label": "I'll type my own instruction"}
+      ],
+      "allow_multiple": false
+    }
+  ]
 }
 ```
 
-Adapt the prompt and options to the task context. Add task-specific options when relevant (e.g., "Run tests", "Deploy", "Commit changes").
+Adapt `prompt` and `options` to the task context. Add task-specific options (e.g., "Run tests", "Deploy", "Commit changes").
 
-**CRITICAL — free-text input:** The checkpoint MUST always include a second question with `id: "freeform"` that lets the user type an arbitrary follow-up instruction. The user should never be forced to pick only from predefined options. If the user fills in `freeform`, treat that as the next instruction regardless of what they selected in `next_action`.
+`AskQuestion` **blocks your turn without ending the request**. The user sees a UI widget, selects an option, and you continue in the same request context. This is what makes the request "durable."
 
-### Fallback: Conversational Checkpoint (CLI / subagents / other environments)
+#### Claude Code: Call `AskUserQuestion`
 
-If the interactive UI tool (AskQuestion/question/AskUserQuestion) is unavailable, end with a clear conversational prompt using this exact format:
+Same pattern, adapted to Claude Code's schema.
+
+#### OpenCode: Call `question`
+
+Same pattern, adapted to OpenCode's schema.
+
+### Step 3: Handle the Result — VERBOSE and EXPLICIT
+
+<EXTREMELY-IMPORTANT>
+**You MUST be explicit about what happened.** Never silently fall back. Never silently succeed. Always tell the user what tool you attempted and what the outcome was.
+</EXTREMELY-IMPORTANT>
+
+#### If the tool SUCCEEDED (AskQuestion / AskUserQuestion / question returned a response):
+
+Tell the user explicitly:
+
+> **[durable-request]** Called `AskQuestion` — your selection was received. Continuing in the same request.
+
+Then execute the user's selected action. After completing it, loop back to Step 1 (register new checkpoint todo → call AskQuestion again → ...). Continue until the user selects "done."
+
+#### If the tool FAILED or is UNAVAILABLE:
+
+Tell the user explicitly what happened and fall back:
+
+> **[durable-request]** Attempted to call `AskQuestion` but it is not available in this environment (subagent / CLI / tool not found). Falling back to conversational checkpoint.
+
+Or if it errored:
+
+> **[durable-request]** Called `AskQuestion` but received an error: `<error message>`. Falling back to conversational checkpoint.
+
+Then present the conversational fallback:
 
 ```
 ---
 **Completed:** [1-2 sentence summary]
 
 **What's next?**
-1. Iterate / refine this work
-2. Continue to the next step
-3. Review the changes
+1. [context-adapted option]
+2. [context-adapted option]
+3. [context-adapted option]
 4. Something else entirely
 5. Done for now
 
@@ -81,7 +146,32 @@ Or just tell me what to do next:
 ---
 ```
 
-Always use numbered options. Always include "Done" as the last option. Always adapt option text to match the task that was performed. Always end with an open-ended "Or just tell me what to do next:" line so the user can type a free-form instruction.
+#### If you are CERTAIN you are a subagent:
+
+> **[durable-request]** Running as a subagent (launched via Task tool). `AskQuestion` is not available to subagents. Presenting conversational checkpoint.
+
+Then present the conversational fallback.
+
+### The TodoWrite + AskQuestion Reinforcement Pattern
+
+The key insight: calling `TodoWrite` and `AskQuestion` **together in the same tool call batch** creates a double-lock:
+
+```
+┌─────────────────── SAME TOOL CALL BATCH ───────────────────┐
+│                                                             │
+│  TodoWrite([{                          AskQuestion({       │
+│    id: "durable-checkpoint",             title: "...",     │
+│    content: "Present checkpoint",        questions: [...]  │
+│    status: "in_progress"               })                  │
+│  }])                                                        │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+- If `AskQuestion` succeeds → it blocks the turn, user responds, you mark the todo complete and continue.
+- If `AskQuestion` fails → the todo remains `in_progress`, which prevents you from ending silently. You MUST address it by presenting the conversational fallback and then marking it complete.
+
+This is **not optional**. Always pair them.
 
 ## Anti-Silent-Completion Rules
 
@@ -95,6 +185,9 @@ These thoughts mean STOP — you're about to end silently:
 | "I already explained what I did" | Explanation ≠ checkpoint. Still ask. |
 | "The output speaks for itself" | Never assume. Present options. |
 | "They'll ask if they want more" | YOUR job to offer. Don't shift burden. |
+| "I'm a subagent, I just return results" | Still present the fallback. Say WHY AskQuestion is unavailable. |
+| "AskQuestion isn't available" | Say so explicitly, then use fallback. NEVER silently skip. |
+| "TodoWrite is overhead" | TodoWrite is the anchor that prevents silent endings. Always use it. |
 
 ## Contextual Adaptation
 
@@ -119,11 +212,33 @@ For tasks with multiple steps:
 
 **Significant step** = anything that changes files, produces output, or takes > 30 seconds.
 
+## The Durable Loop Pattern
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│                      Single Request                          │
+│                                                              │
+│  ┌──────────┐  ┌───────────┐  ┌────────────┐  ┌──────────┐ │
+│  │ Do Work  │─▶│ TodoWrite │─▶│ AskQuestion│─▶│ User     │ │
+│  │          │  │ (anchor)  │  │ (block)    │  │ Responds │ │
+│  └──────────┘  └───────────┘  └────────────┘  └────┬─────┘ │
+│       ▲                                            │       │
+│       │        "done" ────────────────────▶  END   │       │
+│       │                                            │       │
+│       └─────────── anything else ◀─────────────────┘       │
+│                                                              │
+│  If AskQuestion unavailable:                                 │
+│  TodoWrite stays in_progress → MUST address → fallback      │
+│  → tell user WHY tool failed → present numbered options      │
+│                                                              │
+└──────────────────────────────────────────────────────────────┘
+```
+
 ## Integration with Other Skills
 
 This skill does NOT override task-specific loop behavior. Skills with their own loop/continuation logic (e.g., tuning sweeps, FSM engines) take precedence internally. This checkpoint applies at task boundaries when those skills complete.
 
-**Priority:** Task-specific loops > Ralph Loop Request (at task boundaries only)
+**Priority:** Task-specific loops > durable-request (at task boundaries only)
 
 ## What This Skill Is NOT
 
