@@ -4,7 +4,10 @@ This guide is designed to be read and executed by an LLM agent.
 
 ## What You're Installing
 
-A single markdown skill file (`skill/SKILL.md`) that teaches any AI agent to present an interactive checkpoint after completing any task, instead of ending silently. No code, no runtime, no dependencies.
+Two components:
+
+1. **Skill file** (`skill/SKILL.md`) — teaches any AI agent to present an interactive checkpoint after completing any task. Works on all platforms. No runtime, no dependencies.
+2. **CLI checkpoint tool** (`skill/checkpoint.sh` + `skill/checkpoint-ui.sh`, Cursor CLI only) — enables true blocking interactive checkpoints in Cursor CLI via tmux split panes. Optional for other platforms.
 
 ## Step 1: Fetch the Skill File
 
@@ -39,7 +42,46 @@ For each directory in the table above, run:
 mkdir -p <directory> && cp /tmp/durable-request-SKILL.md <directory>/SKILL.md
 ```
 
-## Step 3: Verify
+## Step 3: Install CLI Checkpoint Tool (Cursor CLI only)
+
+This step is **only for Cursor CLI** users. Skip for other platforms.
+
+The CLI checkpoint tool enables true blocking interactive checkpoints in Cursor CLI via tmux split panes.
+
+### 3a: Download the checkpoint scripts
+
+```bash
+curl -sL "https://git.enflame.cn/heng.shi/DurableRequest/-/raw/main/skill/checkpoint.sh" \
+  -o /tmp/durable-checkpoint.sh
+curl -sL "https://git.enflame.cn/heng.shi/DurableRequest/-/raw/main/skill/checkpoint-ui.sh" \
+  -o /tmp/durable-checkpoint-ui.sh
+```
+
+### 3b: Install to Cursor skills directory
+
+```bash
+cp /tmp/durable-checkpoint.sh ~/.cursor/skills/durable-request/checkpoint.sh
+cp /tmp/durable-checkpoint-ui.sh ~/.cursor/skills/durable-request/checkpoint-ui.sh
+chmod +x ~/.cursor/skills/durable-request/checkpoint.sh
+chmod +x ~/.cursor/skills/durable-request/checkpoint-ui.sh
+```
+
+### 3c: Set up tmux alias (recommended)
+
+Add this alias to `~/.bashrc` so `cursor-agent` automatically runs inside tmux:
+
+```bash
+echo "alias cursor-agent='tmux new-session -A -s cursor -- cursor-agent'" >> ~/.bashrc
+source ~/.bashrc
+```
+
+### 3d: Clean up
+
+```bash
+rm -f /tmp/durable-checkpoint.sh /tmp/durable-checkpoint-ui.sh
+```
+
+## Step 4: Verify
 
 Confirm the file exists in at least one location:
 
@@ -49,9 +91,17 @@ ls ~/.cursor/skills/durable-request/SKILL.md 2>/dev/null \
   && echo "Installation verified." || echo "Not found in Cursor paths — check other platform paths."
 ```
 
-## Step 4: Restart Your Agent Session
+Confirm the CLI checkpoint tool is installed (Cursor CLI only):
 
-The skill is active the next time you start an agent session. No config changes needed.
+```bash
+ls ~/.cursor/skills/durable-request/checkpoint.sh 2>/dev/null \
+  && echo "CLI checkpoint tool verified." \
+  || echo "CLI checkpoint not installed (optional, Cursor CLI only)."
+```
+
+## Step 5: Restart Your Agent Session
+
+The skill is active the next time you start an agent session. No config changes needed. The CLI checkpoint tool is picked up automatically.
 
 ## Cleanup
 

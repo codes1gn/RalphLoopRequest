@@ -67,14 +67,16 @@ Detect your environment and attempt the appropriate interactive tool. **Always t
 
 #### Environment Detection
 
-| Signal | Environment | Interactive Tool |
-|--------|------------|-----------------|
-| You have `AskQuestion` in your tool list | Cursor editor (parent agent) | `AskQuestion` |
-| You do NOT have `AskQuestion` but you have `Shell` | Cursor CLI (parent agent) | `checkpoint.sh` via Shell |
-| You have `AskUserQuestion` in your tool list | Claude Code | `AskUserQuestion` |
-| You have `question` in your tool list | OpenCode | `question` |
-| Your context starts with a Task tool prompt | Cursor/Claude subagent | None — conversational fallback |
-| None of the above tools exist | CLI / other | None — conversational fallback |
+**Try tools in this order (first match wins):**
+
+| Priority | Signal | Environment | Action |
+|:--------:|--------|------------|--------|
+| 1 | `AskQuestion` is in your tool list | Cursor editor | Call `AskQuestion` |
+| 2 | `AskUserQuestion` is in your tool list | Claude Code | Call `AskUserQuestion` |
+| 3 | `question` is in your tool list | OpenCode | Call `question` |
+| 4 | You have `Shell` but NOT `AskQuestion` | Cursor CLI | Call `checkpoint.sh` via Shell |
+| 5 | Your context starts with a Task tool prompt | Subagent | Conversational fallback |
+| 6 | None of the above | Other CLI | Conversational fallback |
 
 #### Cursor Editor (Parent Agent): Call `AskQuestion`
 
@@ -152,23 +154,27 @@ Same pattern, adapted to OpenCode's schema.
 **You MUST be explicit about what happened.** Never silently fall back. Never silently succeed. Always tell the user what tool you attempted and what the outcome was.
 </EXTREMELY-IMPORTANT>
 
-#### If the tool SUCCEEDED (AskQuestion / AskUserQuestion / question returned a response):
+#### If the tool SUCCEEDED:
 
-Tell the user explicitly:
-
+For `AskQuestion` / `AskUserQuestion` / `question`:
 > **[durable-request]** Called `AskQuestion` — your selection was received. Continuing in the same request.
 
-Then execute the user's selected action. After completing it, loop back to Step 1 (register new checkpoint todo → call AskQuestion again → ...). Continue until the user selects "done."
+For `checkpoint.sh` (CLI): The output contains `[durable-request] User responded: <choice>`. Parse the choice and continue:
+> **[durable-request]** Called `checkpoint.sh` — user responded: "<choice>". Continuing.
 
-#### If the tool FAILED or is UNAVAILABLE (including Cursor CLI):
+Then execute the user's selected action. After completing it, loop back to Step 1 (register new checkpoint todo → checkpoint again → ...). Continue until the user selects "done."
 
-Tell the user explicitly what happened and fall back:
+#### If `checkpoint.sh` FAILED (no tmux / error):
 
-> **[durable-request]** `AskQuestion` is not available in this environment (CLI / subagent / tool not found). Falling back to conversational checkpoint.
+The script prints setup instructions and falls back with auto-selected first option. Tell the user:
+> **[durable-request]** `checkpoint.sh` failed (no tmux session). For interactive checkpoints, run `cursor-agent` inside tmux. Falling back to conversational checkpoint.
 
-Or if it errored:
+Then present the conversational fallback.
 
-> **[durable-request]** Called `AskQuestion` but received an error: `<error message>`. Falling back to conversational checkpoint.
+#### If ALL tools are UNAVAILABLE (subagent / no Shell):
+
+Tell the user explicitly:
+> **[durable-request]** `AskQuestion` is not available in this environment (subagent / tool not found). Falling back to conversational checkpoint.
 
 Then present the conversational fallback, formatted for terminal readability:
 
@@ -289,8 +295,8 @@ For tasks with multiple steps:
 │       │        "done" ────────────────────────▶ END  │      │
 │       └─────────── anything else ◀───────────────────┘      │
 │                                                              │
-│  checkpoint.sh suspends Cursor TUI → renders prompt on       │
-│  /dev/tty → user responds → resumes Cursor TUI              │
+│  checkpoint.sh creates tmux split pane → user picks option   │
+│  → pane auto-closes → agent reads response from stdout       │
 └──────────────────────────────────────────────────────────────┘
 ```
 

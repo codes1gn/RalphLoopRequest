@@ -171,14 +171,14 @@ Change the target path for your platform — see [install.md](install.md) for al
 
 ## How It Works
 
-The skill operates through two layers:
+The system operates through three layers, each providing a blocking interactive checkpoint:
 
 ```
-Layer 1: AskQuestion (tool-based)   Layer 2: Conversational fallback
-Built-in agent tool                  Numbered text options
-Blocks agent turn, UI widget         Works everywhere
-User picks from structured UI        User types response
-Cursor editor, Claude Code           CLI, subagents, all platforms
+Layer 1: AskQuestion (tool-based)   Layer 2: checkpoint.sh (CLI)        Layer 3: Conversational fallback
+Built-in agent tool                  Tmux split-pane interactive UI       Numbered text options
+Blocks agent turn, UI widget         Blocks via Shell + file polling      Plain text (non-blocking)
+User picks from structured UI        User picks in tmux pane              User types response
+Cursor editor, Claude Code           Cursor CLI (requires tmux)           Subagents, all platforms
 ```
 
 ### Cursor Editor: AskQuestion
@@ -199,25 +199,34 @@ In Cursor's editor, `AskQuestion` is a built-in tool that **pauses the agent's t
 └─────────────────────────────────────────────────┘
 ```
 
-### Cursor CLI: Conversational Checkpoint
+### Cursor CLI: checkpoint.sh via tmux (True Durable Loop)
 
-In Cursor CLI, `AskQuestion` is typically unavailable. The skill falls back to conversational checkpoints — numbered options formatted for the terminal. The `TodoWrite` anchor ensures the agent cannot silently skip the checkpoint.
+In Cursor CLI, `AskQuestion` is not available. The `checkpoint.sh` tool creates a tmux split pane where the user selects their next action, then returns the choice to the agent. The Shell call blocks, achieving a true durable loop:
 
 ```
-┌────────────────────────────────────────────────────────────┐
-│                      Agent Turn                             │
-│                                                             │
-│  ┌──────────┐    ┌──────────────────┐    ┌──────────────┐  │
-│  │ Do Work  │───▶│ Conversational   │───▶│ User types   │  │
-│  │          │    │ checkpoint       │    │ response     │  │
-│  └──────────┘    │ (numbered opts)  │    └──────┬───────┘  │
-│       ▲          └──────────────────┘           │          │
-│       │        "done" ──────────────────▶ END   │          │
-│       └──────── anything else ◀─────────────────┘          │
-└────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────┐
+│                      Single Request                          │
+│                                                              │
+│  ┌──────────┐  ┌───────────┐  ┌──────────────┐ ┌──────────┐│
+│  │ Do Work  │─▶│ TodoWrite │─▶│ Shell:       │─▶│ User     ││
+│  │          │  │ (anchor)  │  │ checkpoint.sh│  │ picks in ││
+│  └──────────┘  └───────────┘  │ (blocks)     │  │ tmux pane││
+│       ▲                       └──────────────┘  └────┬─────┘│
+│       │        "done" ────────────────────────▶ END  │      │
+│       └─────────── anything else ◀───────────────────┘      │
+│                                                              │
+│  checkpoint.sh creates tmux split pane → user picks option   │
+│  → pane auto-closes → agent reads response from stdout       │
+└──────────────────────────────────────────────────────────────┘
 ```
 
-**Note:** Subagents (launched via the `Task` tool) do NOT have access to `AskQuestion`. The skill automatically falls back to conversational checkpoints in subagent contexts.
+**Prerequisite:** Run `cursor-agent` inside tmux. Recommended alias for `~/.bashrc`:
+
+```bash
+alias cursor-agent='tmux new-session -A -s cursor -- cursor-agent'
+```
+
+**Note:** Subagents (launched via the `Task` tool) do NOT have access to `AskQuestion` or `checkpoint.sh`. The skill automatically falls back to conversational checkpoints (Layer 3) in subagent contexts.
 
 The skill **adapts its options contextually** based on what was just completed:
 
@@ -233,14 +242,14 @@ The skill **adapts its options contextually** based on what was just completed:
 
 ## Platform-Specific Behavior
 
-| Platform | Checkpoint Tool | Behavior | Tested |
-|:---------|:---------------|:---------|:------:|
-| Cursor editor (parent) | `AskQuestion` | UI widget, same request | Yes |
-| Cursor CLI (parent) | Conversational fallback | Numbered text options | Yes |
-| Cursor (subagent) | Conversational fallback | Numbered text options | Yes (A/B) |
-| Claude Code | `AskUserQuestion` | Pauses turn, same request | Yes |
-| OpenCode | `question` | Pauses turn, same request | Compatible |
-| CLI / other | Conversational fallback | Numbered text options | Yes (A/B) |
+| Platform | Checkpoint Tool | Blocking? | Behavior | Tested |
+|:---------|:---------------|:---------:|:---------|:------:|
+| Cursor editor (parent) | `AskQuestion` | Yes | UI widget, same request | Yes |
+| Cursor CLI (parent) | `checkpoint.sh` via Shell | Yes | Tmux split pane, same request | Yes |
+| Cursor (subagent) | Conversational fallback | No | Numbered text options | Yes (A/B) |
+| Claude Code | `AskUserQuestion` | Yes | Pauses turn, same request | Yes |
+| OpenCode | `question` | Yes | Pauses turn, same request | Compatible |
+| CLI / other | Conversational fallback | No | Numbered text options | Yes (A/B) |
 
 ## Integration with Existing Skills
 
@@ -311,7 +320,12 @@ durable-request/
 ├── README.md                          # This file
 ├── install.md                         # LLM-readable installation guide
 ├── skill/
-│   └── SKILL.md                       # The skill (copy to install)
+│   ├── SKILL.md                       # The skill (copy to install)
+│   ├── checkpoint.sh                  # CLI checkpoint tool (tmux split-pane)
+│   └── checkpoint-ui.sh              # UI script (runs inside tmux pane)
+├── patches/
+│   ├── FAILURE-SUMMARY.md             # Stop hook attempt analysis
+│   └── cursor-cli-hook-attempt.patch  # Preserved patch for reference
 ├── harness/
 │   └── checkpoint_cli.py          # CLI tool for automated checkpoint testing
 └── data/

@@ -93,10 +93,9 @@ find_tmux_session() {
 TMUX_TARGET=""
 
 if [ -n "${TMUX:-}" ]; then
-  # We're inside tmux — use current session
   TMUX_TARGET=$(tmux display-message -p '#{session_name}:#{window_index}' 2>/dev/null || true)
 elif command -v tmux &>/dev/null; then
-  TMUX_TARGET=$(find_tmux_session)
+  TMUX_TARGET=$(find_tmux_session || true)
 fi
 
 if [ -n "$TMUX_TARGET" ]; then
