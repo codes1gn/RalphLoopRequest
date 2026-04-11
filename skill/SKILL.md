@@ -72,13 +72,20 @@ Detect your environment and attempt the appropriate interactive tool. **Always t
 
 | Priority | Signal | Environment | Action |
 |:--------:|--------|------------|--------|
-| 1 | `AskQuestion` is in your tool list | Cursor editor / CLI | Call `AskQuestion` first |
-| 2 | `AskUserQuestion` is in your tool list | Claude Code | Call `AskUserQuestion` |
-| 3 | `question` is in your tool list | OpenCode | Call `question` |
-| 4 | Your context starts with a Task tool prompt | Subagent | Conversational fallback |
-| 5 | None of the above | Other CLI | Conversational fallback |
+| 1 | `AskQuestion` is in your tool list AND `Shell` is also available | Cursor (editor or CLI) | Call **both** `AskQuestion` and `checkpoint.sh` via Shell **in the same tool call batch** — whichever succeeds first wins |
+| 2 | `AskQuestion` is in your tool list but NO `Shell` | Cursor editor (subagent) | Call `AskQuestion` only |
+| 3 | `AskUserQuestion` is in your tool list | Claude Code | Call `AskUserQuestion` |
+| 4 | `question` is in your tool list | OpenCode | Call `question` |
+| 5 | Your context starts with a Task tool prompt | Subagent | Conversational fallback |
+| 6 | None of the above | Other CLI | Conversational fallback |
 
-**IMPORTANT: If `AskQuestion` fails or is interrupted, AND you have `Shell` access, try `checkpoint.sh` as a secondary checkpoint before falling back to conversational.** This is the expected path in Cursor CLI where `AskQuestion` is listed but does not work.
+<EXTREMELY-IMPORTANT>
+**Priority 1 is critical.** In Cursor CLI, `AskQuestion` is listed as a tool but does NOT work — it will fail or be interrupted. By calling BOTH `AskQuestion` and `checkpoint.sh` in the same batch:
+- In the **editor**: `AskQuestion` succeeds, `checkpoint.sh` output is ignored
+- In **CLI**: `AskQuestion` fails, but `checkpoint.sh` already has the user's response
+
+If you only call `AskQuestion` and it fails, you MUST immediately call `checkpoint.sh` via Shell as your next action. **Do NOT fall back to conversational checkpoint when Shell is available.**
+</EXTREMELY-IMPORTANT>
 
 #### Cursor Editor (Parent Agent): Call `AskQuestion`
 
@@ -168,16 +175,20 @@ Then execute the user's selected action. After completing it, loop back to Step 
 
 #### If `AskQuestion` FAILED or was INTERRUPTED:
 
-**Do NOT go straight to conversational fallback.** If you have `Shell` access, try `checkpoint.sh` first:
+<EXTREMELY-IMPORTANT>
+**Do NOT fall back to conversational. You MUST call `checkpoint.sh` via Shell.**
+
+This is the expected behavior in Cursor CLI. `AskQuestion` is listed but does not work. The correct action is:
+</EXTREMELY-IMPORTANT>
 
 ```bash
 bash ~/.cursor/skills/durable-request/checkpoint.sh \
   "<same prompt>" "<option 1>" "<option 2>" ... "Done"
 ```
 
-If `checkpoint.sh` also fails (no tmux), THEN present conversational fallback.
+Only if `checkpoint.sh` ALSO fails (no tmux), THEN present conversational fallback.
 
-> **[durable-request]** `AskQuestion` failed/interrupted. Trying `checkpoint.sh` via Shell...
+> **[durable-request]** `AskQuestion` failed/interrupted. Calling `checkpoint.sh` via Shell...
 
 #### If `checkpoint.sh` FAILED (no tmux / error):
 
