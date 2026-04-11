@@ -18,52 +18,6 @@ const tmuxCapture = `  === [durable-request] Checkpoint ===
   > Choice (number or text): 1
   * Sent: Run the test suite`;
 
-const fullSession = `$ tmux new-session -A -s cursor -- cursor-agent
-
-> Refactor the auth module to use JWT tokens
-
-Agent: I'll refactor the auth module to use JWT tokens.
-
-  [1/4] Reading current auth implementation...
-  [2/4] Replacing session-based auth with JWT...
-  [3/4] Updating middleware to verify tokens...
-  [4/4] Updating tests...
-
-  Refactored 3 files:
-    - src/auth/provider.ts  (session → JWT)
-    - src/middleware/auth.ts (cookie → Bearer)
-    - tests/auth.test.ts    (updated assertions)
-
-  [Shell] bash checkpoint.sh "Auth JWT refactor done" \\
-         "Run tests" "Review diff" "Iterate" "Done"
-
-  [durable-request] Opening checkpoint in tmux pane...
-  [durable-request] Waiting for user response...
-  [durable-request] Still waiting for user response... (10s)
-
-  ─── tmux split-pane opens below ───────────────
-
-  [durable-request] User responded: Run the test suite
-
-  Running pytest...
-  ✓ test_jwt_signing        passed
-  ✓ test_jwt_verification   passed
-  ✓ test_token_expiry       passed
-  ✓ test_middleware_bearer   passed
-
-  All 4 tests passed.
-
-  [Shell] bash checkpoint.sh "All tests passing" \\
-         "Commit" "Add more tests" "Review" "Done"
-
-  [durable-request] User responded: Commit changes
-
-  [Shell] git add -A && git commit -m "refactor: JWT auth"
-  [main a3f1b2c] refactor: JWT auth
-   3 files changed, 87 insertions(+), 124 deletions(-)
-
-  ↻ Same request. Full context. Zero re-prompting.`;
-
 const architectureDiagram = `┌──────────────────────────────────────────────────────┐
 │                    tmux session                       │
 │                                                      │
@@ -187,20 +141,6 @@ $ cursor-agent
                 </pre>
               </CodeEditor>
             </div>
-          </div>
-        </ScrollReveal>
-
-        {/* Full Session Demo */}
-        <ScrollReveal delay={0.1}>
-          <div className="mb-16">
-            <h2 className="text-xl font-bold mb-4 text-center">
-              Complete Session
-            </h2>
-            <CodeEditor filename="cursor-agent-session.log">
-              <pre className="text-[var(--foreground)] text-xs sm:text-sm leading-relaxed">
-                <code>{fullSession}</code>
-              </pre>
-            </CodeEditor>
           </div>
         </ScrollReveal>
 
