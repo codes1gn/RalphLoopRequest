@@ -24,19 +24,21 @@ This applies to:
 **No exceptions. No silent completions. Always checkpoint.**
 </EXTREMELY-IMPORTANT>
 
-## Three-Layer Checkpoint Architecture
+## Two-Layer Checkpoint Architecture
 
-durable-request uses three layers. The agent tries them in order of preference:
+durable-request uses two layers:
 
 ```
-Layer 1 (tool-based)              Layer 2 (CLI tool)                Layer 3 (conversational)
-────────────────────────────────  ────────────────────────────────  ────────────────────────
-AskQuestion / AskUserQuestion     checkpoint.sh via Shell tool      Numbered text options
-Built-in agent tool               Tmux split-pane interactive UI    Plain text fallback
-Blocks agent turn, UI widget      Blocks via file lock + polling    Works everywhere
-User picks from structured UI     User picks in tmux pane           User types response
-Cursor editor, Claude Code        Cursor CLI (requires tmux)        Subagents, all platforms
+Layer 1 (primary — blocking)               Layer 2 (subagent fallback)
+─────────────────────────────────────────   ────────────────────────────
+checkpoint.sh via Shell tool                Numbered text options
+Tmux split-pane interactive UI              Plain text in response
+Blocks agent turn via file polling          Non-blocking (subagents only)
+User picks in tmux pane                     User types response
+Cursor editor + CLI, Claude Code, OpenCode  Subagents (no Shell access)
 ```
+
+**If you have `Shell` access, ALWAYS use checkpoint.sh. NEVER use conversational fallback.**
 
 ## Checkpoint Mechanism
 
@@ -72,56 +74,23 @@ Detect your environment and attempt the appropriate interactive tool. **Always t
 
 | Priority | Signal | Environment | Action |
 |:--------:|--------|------------|--------|
-| 1 | `AskQuestion` is in your tool list AND `Shell` is also available | Cursor (editor or CLI) | Call **both** `AskQuestion` and `checkpoint.sh` via Shell **in the same tool call batch** — whichever succeeds first wins |
-| 2 | `AskQuestion` is in your tool list but NO `Shell` | Cursor editor (subagent) | Call `AskQuestion` only |
-| 3 | `AskUserQuestion` is in your tool list | Claude Code | Call `AskUserQuestion` |
-| 4 | `question` is in your tool list | OpenCode | Call `question` |
-| 5 | Your context starts with a Task tool prompt | Subagent | Conversational fallback |
-| 6 | None of the above | Other CLI | Conversational fallback |
+| 1 | `AskQuestion` AND `Shell` available | Cursor (editor or CLI) | Call `checkpoint.sh` via Shell |
+| 2 | `AskQuestion` available, no `Shell` | Cursor editor (subagent) | Call `AskQuestion` |
+| 3 | `AskUserQuestion` available | Claude Code | Call `AskUserQuestion` |
+| 4 | `question` available | OpenCode | Call `question` |
+| 5 | None of the above | Other | Conversational fallback |
 
 <EXTREMELY-IMPORTANT>
-**Priority 1 is critical.** In Cursor CLI, `AskQuestion` is listed as a tool but does NOT work — it will fail or be interrupted. By calling BOTH `AskQuestion` and `checkpoint.sh` in the same batch:
-- In the **editor**: `AskQuestion` succeeds, `checkpoint.sh` output is ignored
-- In **CLI**: `AskQuestion` fails, but `checkpoint.sh` already has the user's response
+**Priority 1: When both `AskQuestion` and `Shell` are available, ALWAYS use `checkpoint.sh` via Shell — NEVER use `AskQuestion`.**
 
-If you only call `AskQuestion` and it fails, you MUST immediately call `checkpoint.sh` via Shell as your next action. **Do NOT fall back to conversational checkpoint when Shell is available.**
+Why: In Cursor CLI, `AskQuestion` is listed but does NOT work. `checkpoint.sh` works in both editor and CLI (it creates a tmux split pane). Using `checkpoint.sh` as the primary tool eliminates the failure cascade entirely.
+
+**NEVER present conversational fallback (numbered text options) when `Shell` is available.** Conversational fallback is ONLY for environments where `Shell` is not available (subagents).
 </EXTREMELY-IMPORTANT>
 
-#### Cursor Editor (Parent Agent): Call `AskQuestion`
+#### Cursor (Editor + CLI): Call `checkpoint.sh` via Shell
 
-Call `AskQuestion` with a **single question**. The last option MUST always be a freeform/custom option — never omit it:
-
-```json
-{
-  "title": "Task Checkpoint",
-  "questions": [
-    {
-      "id": "next_action",
-      "prompt": "<1-2 sentence summary of what was completed>. What would you like to do next?",
-      "options": [
-        {"id": "iterate",   "label": "Iterate / refine what was just done"},
-        {"id": "continue",  "label": "Continue to the next step"},
-        {"id": "review",    "label": "Review the changes in detail"},
-        {"id": "different", "label": "Switch to a different task"},
-        {"id": "done",      "label": "I'm satisfied, we're done"},
-        {"id": "custom",    "label": "I'll type my own instruction"}
-      ],
-      "allow_multiple": false
-    }
-  ]
-}
-```
-
-Rules:
-- **Single question only** — never use multiple questions
-- **Last option must always be `custom`** — the user can type a free-form instruction instead of picking a preset
-- Adapt `prompt` and middle `options` to the task context (e.g., "Run tests", "Deploy", "Commit")
-
-`AskQuestion` **blocks your turn without ending the request**. The user sees a UI widget, selects an option, and you continue in the same request context. This is what makes the request "durable."
-
-#### Cursor CLI (Parent Agent): Call `checkpoint.sh` via Shell
-
-In Cursor CLI, `AskQuestion` is not available. Instead, use the **checkpoint.sh** CLI tool which opens a tmux split pane with an interactive prompt and returns the user's choice:
+**This is the primary checkpoint mechanism for ALL Cursor environments.** Call `checkpoint.sh` via the Shell tool. It creates a tmux split pane with an interactive prompt and returns the user's choice:
 
 ```bash
 bash ~/.cursor/skills/durable-request/checkpoint.sh \
@@ -140,14 +109,18 @@ alias cursor-agent='tmux new-session -A -s cursor -- cursor-agent'
 ```
 
 Rules:
-- Call this via the **Shell** tool
-- First argument is the prompt (1-2 sentence summary of what was completed + "What would you like to do next?")
+- Call this via the **Shell** tool — do NOT use `AskQuestion`
+- First argument is the prompt (1-2 sentence summary + "What would you like to do next?")
 - Subsequent arguments are context-adapted options
 - The script automatically appends a freeform "I'll type my own instruction" option as the last choice
 - The script returns `[durable-request] User responded: <choice>` — use this to continue
-- If tmux is not available, the script falls back with an auto-selected first option and prints setup instructions
+- If tmux is not available, the script falls back with an auto-selected first option
 
 **How it works:** The Shell call blocks while `checkpoint.sh` creates a tmux split pane running `checkpoint-ui.sh`. The user sees an interactive prompt in the bottom pane, selects an option, and the pane auto-closes. The agent reads the response from stdout and continues — same request, same context.
+
+<EXTREMELY-IMPORTANT>
+**Do NOT call `AskQuestion` in Cursor.** `AskQuestion` does not work in Cursor CLI. Always use `checkpoint.sh` via Shell instead. This works in both editor and CLI environments.
+</EXTREMELY-IMPORTANT>
 
 #### Claude Code: Call `AskUserQuestion`
 
@@ -173,36 +146,18 @@ For `checkpoint.sh` (CLI): The output contains `[durable-request] User responded
 
 Then execute the user's selected action. After completing it, loop back to Step 1 (register new checkpoint todo → checkpoint again → ...). Continue until the user selects "done."
 
-#### If `AskQuestion` FAILED or was INTERRUPTED:
-
-<EXTREMELY-IMPORTANT>
-**Do NOT fall back to conversational. You MUST call `checkpoint.sh` via Shell.**
-
-This is the expected behavior in Cursor CLI. `AskQuestion` is listed but does not work. The correct action is:
-</EXTREMELY-IMPORTANT>
-
-```bash
-bash ~/.cursor/skills/durable-request/checkpoint.sh \
-  "<same prompt>" "<option 1>" "<option 2>" ... "Done"
-```
-
-Only if `checkpoint.sh` ALSO fails (no tmux), THEN present conversational fallback.
-
-> **[durable-request]** `AskQuestion` failed/interrupted. Calling `checkpoint.sh` via Shell...
-
 #### If `checkpoint.sh` FAILED (no tmux / error):
 
-The script prints setup instructions and falls back with auto-selected first option. Tell the user:
-> **[durable-request]** `checkpoint.sh` failed (no tmux session). For interactive checkpoints, run `cursor-agent` inside tmux. Falling back to conversational checkpoint.
+The script auto-selects the first option and prints setup instructions. Tell the user:
+> **[durable-request]** `checkpoint.sh` requires tmux. Run `cursor-agent` inside tmux: `tmux new-session -A -s cursor -- cursor-agent`
 
-Then present the conversational fallback.
+The agent continues with the auto-selected option.
 
-#### If ALL tools are UNAVAILABLE (subagent / no Shell):
+#### If NO `Shell` available (subagent only):
 
-Tell the user explicitly:
-> **[durable-request]** `AskQuestion` is not available in this environment (subagent / tool not found). Falling back to conversational checkpoint.
+Only subagents lack Shell access. In this case, present conversational fallback:
 
-Then present the conversational fallback, formatted for terminal readability:
+> **[durable-request]** Running as a subagent. Presenting checkpoint.
 
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -219,11 +174,10 @@ Then present the conversational fallback, formatted for terminal readability:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
-#### If you are CERTAIN you are a subagent:
-
-> **[durable-request]** Running as a subagent (launched via Task tool). `AskQuestion` is not available to subagents. Presenting conversational checkpoint.
-
-Then present the conversational fallback.
+<EXTREMELY-IMPORTANT>
+**Conversational fallback (numbered text in response) is ONLY for subagents that lack Shell access.**
+If you have `Shell`, you MUST use `checkpoint.sh`. NEVER output conversational fallback when Shell is available.
+</EXTREMELY-IMPORTANT>
 
 ### The TodoWrite + Checkpoint Reinforcement Pattern
 
@@ -232,24 +186,20 @@ The key insight: calling `TodoWrite` and the checkpoint **together in the same t
 ```
 ┌─────────────────── SAME TOOL CALL BATCH ───────────────────┐
 │                                                             │
-│  TodoWrite([{                          AskQuestion({       │
-│    id: "durable-checkpoint",             title: "...",     │
-│    content: "Present checkpoint",        questions: [...]  │
-│    status: "in_progress"               })                  │
-│  }])                                                        │
+│  TodoWrite([{                     Shell: checkpoint.sh     │
+│    id: "durable-checkpoint",        "What's next?"         │
+│    content: "Present checkpoint",   "Run tests" "Commit"   │
+│    status: "in_progress"            "Done"                  │
+│  }])                              (blocks until user picks) │
+│                                                             │
+│  Subagent (no Shell): TodoWrite + conversational fallback  │
 │                                                             │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-**Cascade on failure (ALWAYS follow this order):**
-
-1. `AskQuestion` succeeds → blocks turn, user responds, mark todo complete, continue
-2. `AskQuestion` fails/interrupted → **try `checkpoint.sh` via Shell** (if Shell available)
-3. `checkpoint.sh` succeeds → Shell blocks, user responds in tmux pane, continue
-4. `checkpoint.sh` fails (no tmux) → present conversational fallback, mark todo complete
-5. No Shell access (subagent) → conversational fallback immediately
-
-**Never skip step 2.** If `AskQuestion` fails in Cursor CLI, `checkpoint.sh` is the designed solution.
+- `checkpoint.sh` succeeds → Shell blocks, user responds in tmux pane, mark todo complete, continue
+- `checkpoint.sh` fails (no tmux) → auto-selects first option, agent continues
+- No Shell (subagent) → conversational fallback in text
 
 This is **not optional**. Always pair TodoWrite with the checkpoint.
 
