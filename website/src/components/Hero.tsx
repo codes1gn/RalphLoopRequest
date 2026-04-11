@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { CodeEditor } from "./CodeEditor";
-import { PandaLogo } from "./PandaLogo";
+import mascotLogo from "../assets/durable-request-mascot-logo.png";
 
 const demoConversation = `User:  Add dark mode to my settings page
 
@@ -132,7 +132,7 @@ export function Hero() {
             transition={{ duration: 0.5 }}
             className="mb-4"
           >
-            <PandaLogo size={96} />
+            <img src={mascotLogo} alt="DurableRequest mascot" className="w-24 h-24 sm:w-28 sm:h-28" />
           </motion.div>
 
           <motion.div
@@ -152,7 +152,7 @@ export function Hero() {
           >
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             <span className="text-[var(--muted-foreground)]">
-              Prompt-only — zero dependencies — one file
+              Zero dependencies — one file
             </span>
           </motion.div>
 

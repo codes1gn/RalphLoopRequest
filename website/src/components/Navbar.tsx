@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { PandaLogo } from "./PandaLogo";
+import mascotLogo from "../assets/durable-request-mascot-logo.png";
 
 const REPO_URL = "http://git.enflame.cn/skills/durablerequest";
 
@@ -22,7 +22,7 @@ export function Navbar() {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         <a href="#" className="flex items-center gap-2 font-bold text-lg">
-          <PandaLogo size={28} />
+          <img src={mascotLogo} alt="DurableRequest" className="w-7 h-7" />
           <span>durable-request</span>
         </a>
         <div className="hidden sm:flex items-center gap-8 text-sm text-[var(--muted-foreground)]">
