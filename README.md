@@ -171,22 +171,19 @@ Change the target path for your platform — see [install.md](install.md) for al
 
 ## How It Works
 
-The skill operates through three layers:
+The skill operates through two layers:
 
 ```
-Layer 1: AskQuestion tool          Layer 2: Conversational fallback    Layer 3: Anti-rationalization
-(structured UI widget)             (numbered text options)             (prevents silent completion)
-                                                                      
-  [Iterate]  [Continue]              1. Iterate / refine               "Task is done" → STOP, ask first
-  [Review]   [Switch]                2. Continue next step             "Simple change" → still confirm
-  [Done]                             3. Review changes                 "They'll ask" → YOUR job to offer
-                                     4. Switch task                    
-                                     5. Done                           
+Layer 1: AskQuestion (tool-based)   Layer 2: Conversational fallback
+Built-in agent tool                  Numbered text options
+Blocks agent turn, UI widget         Works everywhere
+User picks from structured UI        User types response
+Cursor editor, Claude Code           CLI, subagents, all platforms
 ```
 
-### Cursor Agent: The Durable Loop
+### Cursor Editor: AskQuestion
 
-In Cursor's agent mode, `AskQuestion` is a built-in tool that **pauses the agent's turn without ending the request**. The user responds through a structured UI widget, and the agent continues in the same request context. This creates a true durable loop — multiple tasks completed in a single billed request:
+In Cursor's editor, `AskQuestion` is a built-in tool that **pauses the agent's turn without ending the request**. The user responds through a structured UI widget, and the agent continues in the same request context:
 
 ```
 ┌─────────────────────────────────────────────────┐
@@ -200,6 +197,24 @@ In Cursor's agent mode, `AskQuestion` is a built-in tool that **pauses the agent
 │       │          "done" ──────────▶ END  │      │
 │       └──────── anything else ◀──────────┘      │
 └─────────────────────────────────────────────────┘
+```
+
+### Cursor CLI: Conversational Checkpoint
+
+In Cursor CLI, `AskQuestion` is typically unavailable. The skill falls back to conversational checkpoints — numbered options formatted for the terminal. The `TodoWrite` anchor ensures the agent cannot silently skip the checkpoint.
+
+```
+┌────────────────────────────────────────────────────────────┐
+│                      Agent Turn                             │
+│                                                             │
+│  ┌──────────┐    ┌──────────────────┐    ┌──────────────┐  │
+│  │ Do Work  │───▶│ Conversational   │───▶│ User types   │  │
+│  │          │    │ checkpoint       │    │ response     │  │
+│  └──────────┘    │ (numbered opts)  │    └──────┬───────┘  │
+│       ▲          └──────────────────┘           │          │
+│       │        "done" ──────────────────▶ END   │          │
+│       └──────── anything else ◀─────────────────┘          │
+└────────────────────────────────────────────────────────────┘
 ```
 
 **Note:** Subagents (launched via the `Task` tool) do NOT have access to `AskQuestion`. The skill automatically falls back to conversational checkpoints in subagent contexts.
@@ -220,7 +235,8 @@ The skill **adapts its options contextually** based on what was just completed:
 
 | Platform | Checkpoint Tool | Behavior | Tested |
 |:---------|:---------------|:---------|:------:|
-| Cursor (parent agent) | `AskQuestion` | Pauses turn, UI widget, same request | Yes |
+| Cursor editor (parent) | `AskQuestion` | UI widget, same request | Yes |
+| Cursor CLI (parent) | Conversational fallback | Numbered text options | Yes |
 | Cursor (subagent) | Conversational fallback | Numbered text options | Yes (A/B) |
 | Claude Code | `AskUserQuestion` | Pauses turn, same request | Yes |
 | OpenCode | `question` | Pauses turn, same request | Compatible |

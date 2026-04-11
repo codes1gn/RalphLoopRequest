@@ -23,6 +23,20 @@ This applies to:
 **No exceptions. No silent completions. Always checkpoint.**
 </EXTREMELY-IMPORTANT>
 
+## Two-Layer Checkpoint Architecture
+
+durable-request uses two layers. The agent tries the tool-based layer first; if unavailable, it falls back to conversational.
+
+```
+Layer 1 (tool-based)              Layer 2 (conversational)
+────────────────────────────────  ────────────────────────
+AskQuestion / AskUserQuestion     Numbered text options
+Built-in agent tool               Plain text fallback
+Blocks agent turn, UI widget      Works everywhere
+User picks from structured UI     User types response
+Cursor editor, Claude Code        CLI, subagents, all platforms
+```
+
 ## Checkpoint Mechanism
 
 ### Step 1: Anchor Checkpoint Intent with TodoWrite
@@ -55,13 +69,14 @@ Detect your environment and attempt the appropriate interactive tool. **Always t
 
 | Signal | Environment | Interactive Tool |
 |--------|------------|-----------------|
-| You have `AskQuestion` in your tool list | Cursor parent agent | `AskQuestion` |
+| You have `AskQuestion` in your tool list | Cursor editor (parent agent) | `AskQuestion` |
+| You do NOT have `AskQuestion` but you have `TodoWrite`, `Shell`, etc. | Cursor CLI (parent agent) | None — conversational fallback |
 | You have `AskUserQuestion` in your tool list | Claude Code | `AskUserQuestion` |
 | You have `question` in your tool list | OpenCode | `question` |
 | Your context starts with a Task tool prompt | Cursor/Claude subagent | None — fallback |
 | None of the above tools exist | CLI / other | None — fallback |
 
-#### Cursor Parent Agent: Call `AskQuestion`
+#### Cursor Editor (Parent Agent): Call `AskQuestion`
 
 Call `AskQuestion` with a **single question**. The last option MUST always be a freeform/custom option — never omit it:
 
@@ -93,6 +108,10 @@ Rules:
 
 `AskQuestion` **blocks your turn without ending the request**. The user sees a UI widget, selects an option, and you continue in the same request context. This is what makes the request "durable."
 
+#### Cursor CLI (Parent Agent): Conversational Checkpoint
+
+In Cursor CLI, `AskQuestion` is typically not available. Instead, present the **conversational checkpoint** (Layer 2) — numbered options formatted for a terminal. The user types their choice or a free-form instruction, and you continue.
+
 #### Claude Code: Call `AskUserQuestion`
 
 Same pattern, adapted to Claude Code's schema.
@@ -115,31 +134,31 @@ Tell the user explicitly:
 
 Then execute the user's selected action. After completing it, loop back to Step 1 (register new checkpoint todo → call AskQuestion again → ...). Continue until the user selects "done."
 
-#### If the tool FAILED or is UNAVAILABLE:
+#### If the tool FAILED or is UNAVAILABLE (including Cursor CLI):
 
 Tell the user explicitly what happened and fall back:
 
-> **[durable-request]** Attempted to call `AskQuestion` but it is not available in this environment (subagent / CLI / tool not found). Falling back to conversational checkpoint.
+> **[durable-request]** `AskQuestion` is not available in this environment (CLI / subagent / tool not found). Falling back to conversational checkpoint.
 
 Or if it errored:
 
 > **[durable-request]** Called `AskQuestion` but received an error: `<error message>`. Falling back to conversational checkpoint.
 
-Then present the conversational fallback:
+Then present the conversational fallback, formatted for terminal readability:
 
 ```
----
-**Completed:** [1-2 sentence summary]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ Completed: [1-2 sentence summary]
 
-**What's next?**
-1. [context-adapted option]
-2. [context-adapted option]
-3. [context-adapted option]
-4. Something else entirely
-5. Done for now
+ What's next?
+  1. [context-adapted option]
+  2. [context-adapted option]
+  3. [context-adapted option]
+  4. Something else entirely
+  5. Done for now
 
-Or just tell me what to do next:
----
+ Or just tell me what to do next:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
 #### If you are CERTAIN you are a subagent:
@@ -148,9 +167,9 @@ Or just tell me what to do next:
 
 Then present the conversational fallback.
 
-### The TodoWrite + AskQuestion Reinforcement Pattern
+### The TodoWrite + Checkpoint Reinforcement Pattern
 
-The key insight: calling `TodoWrite` and `AskQuestion` **together in the same tool call batch** creates a double-lock:
+The key insight: calling `TodoWrite` and the checkpoint **together in the same tool call batch** creates a double-lock:
 
 ```
 ┌─────────────────── SAME TOOL CALL BATCH ───────────────────┐
@@ -161,13 +180,16 @@ The key insight: calling `TodoWrite` and `AskQuestion` **together in the same to
 │    status: "in_progress"               })                  │
 │  }])                                                        │
 │                                                             │
+│  In CLI (no AskQuestion): TodoWrite alone is the anchor.   │
+│  Present conversational checkpoint in the same response.    │
+│                                                             │
 └─────────────────────────────────────────────────────────────┘
 ```
 
 - If `AskQuestion` succeeds → it blocks the turn, user responds, you mark the todo complete and continue.
-- If `AskQuestion` fails → the todo remains `in_progress`, which prevents you from ending silently. You MUST address it by presenting the conversational fallback and then marking it complete.
+- If `AskQuestion` fails or is unavailable → the todo remains `in_progress`, which prevents you from ending silently. You MUST address it by presenting the conversational fallback and then marking it complete.
 
-This is **not optional**. Always pair them.
+This is **not optional**. Always pair TodoWrite with the checkpoint.
 
 ## Anti-Silent-Completion Rules
 
@@ -210,6 +232,8 @@ For tasks with multiple steps:
 
 ## The Durable Loop Pattern
 
+### Editor (AskQuestion available)
+
 ```
 ┌──────────────────────────────────────────────────────────────┐
 │                      Single Request                          │
@@ -220,13 +244,27 @@ For tasks with multiple steps:
 │  └──────────┘  └───────────┘  └────────────┘  └────┬─────┘ │
 │       ▲                                            │       │
 │       │        "done" ────────────────────▶  END   │       │
-│       │                                            │       │
 │       └─────────── anything else ◀─────────────────┘       │
+└──────────────────────────────────────────────────────────────┘
+```
+
+### CLI / No AskQuestion (TodoWrite + conversational fallback)
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│                      Single Request                          │
 │                                                              │
-│  If AskQuestion unavailable:                                 │
+│  ┌──────────┐  ┌───────────┐  ┌────────────────────────┐    │
+│  │ Do Work  │─▶│ TodoWrite │─▶│ Conversational         │    │
+│  │          │  │ (anchor)  │  │ checkpoint (numbered   │    │
+│  └──────────┘  └───────────┘  │ options for terminal)  │    │
+│                                └───────────┬────────────┘    │
+│       ▲                                    │                 │
+│       │        "done" ──────────────▶ END  │                 │
+│       └─────────── anything else ◀─────────┘                 │
+│                                                              │
+│  If agent forgets checkpoint:                                │
 │  TodoWrite stays in_progress → MUST address → fallback      │
-│  → tell user WHY tool failed → present numbered options      │
-│                                                              │
 └──────────────────────────────────────────────────────────────┘
 ```
 
