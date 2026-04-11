@@ -62,7 +62,7 @@ Detect your environment and attempt the appropriate interactive tool. **Always t
 
 #### Cursor Parent Agent: Call `AskQuestion`
 
-Call `AskQuestion` with these parameters:
+Call `AskQuestion` with a **single question**. The last option MUST always be a freeform/custom option — never omit it:
 
 ```json
 {
@@ -76,16 +76,8 @@ Call `AskQuestion` with these parameters:
         {"id": "continue",  "label": "Continue to the next step"},
         {"id": "review",    "label": "Review the changes in detail"},
         {"id": "different", "label": "Switch to a different task"},
-        {"id": "done",      "label": "I'm satisfied, we're done"}
-      ],
-      "allow_multiple": false
-    },
-    {
-      "id": "freeform",
-      "prompt": "Or describe what you'd like to do next:",
-      "options": [
-        {"id": "skip", "label": "Skip — use the selection above instead"},
-        {"id": "custom", "label": "I'll type my own instruction"}
+        {"id": "done",      "label": "I'm satisfied, we're done"},
+        {"id": "custom",    "label": "I'll type my own instruction"}
       ],
       "allow_multiple": false
     }
@@ -93,7 +85,10 @@ Call `AskQuestion` with these parameters:
 }
 ```
 
-Adapt `prompt` and `options` to the task context. Add task-specific options (e.g., "Run tests", "Deploy", "Commit changes").
+Rules:
+- **Single question only** — never use multiple questions
+- **Last option must always be `custom`** — the user can type a free-form instruction instead of picking a preset
+- Adapt `prompt` and middle `options` to the task context (e.g., "Run tests", "Deploy", "Commit")
 
 `AskQuestion` **blocks your turn without ending the request**. The user sees a UI widget, selects an option, and you continue in the same request context. This is what makes the request "durable."
 
