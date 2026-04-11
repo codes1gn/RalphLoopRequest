@@ -1,16 +1,20 @@
 import { useEffect, useState } from "react";
+import { Link, useLocation } from "react-router-dom";
 import mascotLogo from "../assets/durable-request-mascot-logo.png";
 
 const REPO_URL = "http://git.enflame.cn/skills/durablerequest";
 
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
+  const location = useLocation();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  const isHome = location.pathname === "/";
 
   return (
     <nav
@@ -21,22 +25,36 @@ export function Navbar() {
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        <a href="#" className="flex items-center gap-2 font-bold text-lg">
+        <Link to="/" className="flex items-center gap-2 font-bold text-lg">
           <img src={mascotLogo} alt="DurableRequest" className="w-7 h-7" />
           <span>durable-request</span>
-        </a>
+        </Link>
         <div className="hidden sm:flex items-center gap-8 text-sm text-[var(--muted-foreground)]">
-          <a href="#features" className="hover:text-[var(--foreground)] transition-colors">
-            Product
-          </a>
-          <a
-            href={`${REPO_URL}/-/blob/main/CHANGELOG.md`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-[var(--foreground)] transition-colors"
+          {isHome ? (
+            <a href="#features" className="hover:text-[var(--foreground)] transition-colors">
+              Product
+            </a>
+          ) : (
+            <Link to="/" className="hover:text-[var(--foreground)] transition-colors">
+              Product
+            </Link>
+          )}
+          <Link
+            to="/changelog"
+            className={`hover:text-[var(--foreground)] transition-colors ${
+              location.pathname === "/changelog" ? "text-[var(--foreground)] font-semibold" : ""
+            }`}
           >
             Changelog
-          </a>
+          </Link>
+          <Link
+            to="/cli-session"
+            className={`hover:text-[var(--foreground)] transition-colors ${
+              location.pathname === "/cli-session" ? "text-[var(--foreground)] font-semibold" : ""
+            }`}
+          >
+            CLI Demo
+          </Link>
           <a
             href={REPO_URL}
             target="_blank"

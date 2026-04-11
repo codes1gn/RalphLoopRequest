@@ -9,11 +9,17 @@ All notable changes to durable-request are documented here.
 - Three-layer checkpoint architecture: AskQuestion (editor) → checkpoint.sh (CLI) → conversational fallback (subagents)
 - Tmux alias for cursor-agent: `alias cursor-agent='tmux new-session -A -s cursor -- cursor-agent'`
 - Preserved failed stop-hook attempt in `patches/` for reference
+- **In-app Changelog page** — no more jumping to GitLab, full changelog rendered on the website with styled badges
+- **CLI Session demo page** (`/cli-session`) — step-by-step walkthrough with real tmux capture, architecture diagram, and key properties
+- React Router (HashRouter) for multi-page navigation
+- "CLI Demo" nav link in navbar
 
 ### Changed
 - SKILL.md: priority-ordered environment detection table, CLI-specific success handler, tmux diagram
 - README.md: updated platform behavior table with "Blocking?" column, new CLI architecture diagram
 - install.md: added Step 3 for CLI checkpoint tool + tmux/locale setup
+- Slogan updated to "Your Agent Requests Should Give You More Value" (highlighting "Requests" and "Value")
+- Navbar: Changelog and CLI Demo now use in-app routes instead of external links
 
 ### Fixed
 - `set -e` in checkpoint.sh caused silent exit when tmux was unavailable (now gracefully falls back)
@@ -23,6 +29,7 @@ All notable changes to durable-request are documented here.
 - Cursor CLI Shell tool runs in sandbox — no `/dev/tty` access, but CAN access tmux via `tmux split-window`
 - File-based IPC: checkpoint.sh writes question, checkpoint-ui.sh writes answer, polling loop bridges them
 - Keep-alive messages every 10s prevent Shell tool timeout during long user response times
+- Install + 20 checkpoint continuation test: all 60 batch simulations passed (20×continue, 20×iterate, 20×done)
 
 ## [1.0.1] - 2026-04-11
 

@@ -24,6 +24,7 @@ Usage:
 
 import argparse
 import json
+import os
 import sys
 import time
 import re
@@ -336,9 +337,12 @@ Let me know if you need anything else."""
         "transcript_bad": result_bad
     }
 
-    with open("/tmp/durable-verify/results/harness-test-suite.json", "w") as f:
+    results_dir = getattr(args, "results_dir", None) or "/tmp/durable-verify/results"
+    os.makedirs(results_dir, exist_ok=True)
+    report_path = os.path.join(results_dir, "harness-test-suite.json")
+    with open(report_path, "w") as f:
         json.dump(report, f, indent=2)
-    print(f"\nFull report: /tmp/durable-verify/results/harness-test-suite.json")
+    print(f"\nFull report: {report_path}")
 
 
 def main():
@@ -368,6 +372,11 @@ def main():
     p_batch.set_defaults(func=cmd_batch)
 
     p_suite = sub.add_parser("test-suite", help="Run full test suite")
+    p_suite.add_argument(
+        "--results-dir",
+        default="/tmp/durable-verify/results",
+        help="Directory for harness-test-suite.json (created if missing)",
+    )
     p_suite.set_defaults(func=cmd_test_suite)
 
     args = parser.parse_args()

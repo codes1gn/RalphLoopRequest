@@ -162,8 +162,10 @@ export function Hero() {
             transition={{ duration: 0.5, delay: 0.15 }}
             className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight max-w-3xl leading-[1.2] text-[var(--muted-foreground)]"
           >
-            Your Agent Should{" "}
-            <span className="text-gradient font-extrabold text-[var(--foreground)]">Give You More</span>
+            Your Agent{" "}
+            <span className="text-gradient font-extrabold text-[var(--foreground)]">Requests</span>
+            {" "}Should Give You More{" "}
+            <span className="text-gradient font-extrabold text-[var(--foreground)]">Value</span>
           </motion.h1>
 
           <motion.p
