@@ -154,7 +154,7 @@ export function Hero() {
             className="text-5xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight max-w-5xl leading-[1.1]"
           >
             Your Agent Should{" "}
-            <span className="text-gradient">Never End</span> Silently
+            <span className="text-gradient">Give You More</span>
           </motion.h1>
 
           <motion.p
