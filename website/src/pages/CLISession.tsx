@@ -153,7 +153,7 @@ export function CLISession() {
             </span>
           </div>
           <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight mb-4">
-            The CLI Durable Loop
+            The CLI Plugin Design
           </h1>
           <p className="text-lg text-[var(--muted-foreground)] max-w-2xl mx-auto">
             Interactive checkpoints in your terminal. No separate windows, no lost context.
@@ -161,8 +161,37 @@ export function CLISession() {
           </p>
         </motion.div>
 
-        {/* Full Session Demo */}
+        {/* Quick Start — usage first */}
         <ScrollReveal>
+          <div className="mb-16">
+            <h2 className="text-xl font-bold mb-2 text-center">
+              Usage
+            </h2>
+            <p className="text-sm text-[var(--muted-foreground)] text-center mb-4 max-w-xl mx-auto">
+              After installing durable-request, just run <code className="px-1.5 py-0.5 rounded bg-[var(--muted)] text-xs font-mono">cursor-agent</code> as usual.
+              The tmux alias wraps it automatically — you get the same Cursor CLI TUI, with interactive checkpoints built in.
+            </p>
+            <div className="max-w-2xl mx-auto">
+              <CodeEditor filename="terminal">
+                <pre className="text-[var(--foreground)] text-xs sm:text-sm leading-relaxed">
+                  <code>{`# One-time setup (add to ~/.bashrc)
+alias cursor-agent='tmux new-session -A -s cursor -- cursor-agent'
+
+# Then just run it normally — tmux wraps transparently
+$ cursor-agent
+
+# The Cursor CLI TUI launches as usual inside tmux.
+# When the agent reaches a checkpoint, a split pane opens below
+# with your options. Pick one, the pane closes, agent continues.
+# Same request. Full context. No re-prompting.`}</code>
+                </pre>
+              </CodeEditor>
+            </div>
+          </div>
+        </ScrollReveal>
+
+        {/* Full Session Demo */}
+        <ScrollReveal delay={0.1}>
           <div className="mb-16">
             <h2 className="text-xl font-bold mb-4 text-center">
               Complete Session
