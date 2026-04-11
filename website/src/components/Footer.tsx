@@ -9,12 +9,12 @@ export function Footer() {
         </div>
         <div className="flex items-center gap-6">
           <a
-            href="https://github.com/anthropics/durable-request"
+            href="http://git.enflame.cn/skills/durablerequest"
             target="_blank"
             rel="noopener noreferrer"
             className="hover:text-[var(--foreground)] transition-colors"
           >
-            GitHub
+            GitLab
           </a>
           <span>MIT License</span>
         </div>
