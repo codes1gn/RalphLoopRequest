@@ -1,34 +1,7 @@
 import { motion } from "framer-motion";
 import { CodeEditor } from "./CodeEditor";
 import mascotLogo from "../assets/durable-request-mascot-logo.png";
-
-const demoConversation = `User:  Add dark mode to my settings page
-
-Agent: [works for 2 minutes... adds ThemeProvider, toggle, CSS vars]
-
-       ┌─────────────────────────────────────────┐
-       │  ✅ Dark mode added to settings page.    │
-       │  What would you like to do next?         │
-       │                                          │
-       │  ○ Run the test suite                    │
-       │  ○ Iterate on the toggle UX              │
-       │  ○ Review the diff                       │
-       │  ○ I'm satisfied, we're done             │
-       │  ○ I'll type my own instruction          │
-       └─────────────────────────────────────────┘
-
-User:  > Run tests
-
-Agent: [runs tests... 3 passed, 1 failed: contrast ratio]
-       [fixes the failing test automatically]
-
-       ┌─────────────────────────────────────────┐
-       │  ✅ All 4 tests passing.                  │
-       │  What would you like to do next?         │
-       │  ...                                     │
-       └─────────────────────────────────────────┘
-
-       ↻ Same request. Full context. No re-prompting.`;
+import exampleSessionRaw from "../assets/durable-request-example.md?raw";
 
 function ValuePillar({
   icon,
@@ -256,16 +229,24 @@ export function Hero() {
           />
         </motion.div>
 
-        {/* Code Demo */}
+        {/* Real Session Transcript */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.6 }}
+          transition={{ duration: 0.7, delay: 0.8 }}
           className="mt-16 w-full max-w-4xl mx-auto"
         >
-          <CodeEditor filename="cursor-agent-session — the durable loop in action">
-            <pre className="text-[var(--foreground)] text-xs sm:text-sm">
-              <code>{demoConversation}</code>
+          <h2 className="text-xl font-bold mb-2 text-center">
+            Real Session — 6 Checkpoints, 1 Request
+          </h2>
+          <p className="text-sm text-[var(--muted-foreground)] text-center mb-4 max-w-2xl mx-auto">
+            An actual Cursor CLI session where the agent writes a LinkedIn post,
+            then iterates through 6 checkpoint loops — shortening, reframing, adjusting tone —
+            all in a single request with full context.
+          </p>
+          <CodeEditor filename="cursor-agent session — exported from real run (df24bb15)">
+            <pre className="text-[var(--foreground)] text-xs sm:text-sm max-h-[500px] overflow-y-auto leading-relaxed">
+              <code>{exampleSessionRaw}</code>
             </pre>
           </CodeEditor>
         </motion.div>

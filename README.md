@@ -141,10 +141,13 @@ The agent fetches the install guide and handles everything: downloading the skil
 
 ### Manual (Single Platform)
 
+The skill is the entire `skill/` folder — install it as a `durable-request/` directory:
+
 ```bash
-mkdir -p ~/.cursor/skills/durable-request && \
-curl -sL "http://git.enflame.cn/skills/durablerequest/-/raw/main/skill/SKILL.md" \
-  -o ~/.cursor/skills/durable-request/SKILL.md
+DIR=~/.cursor/skills/durable-request && mkdir -p "$DIR" && \
+for f in SKILL.md checkpoint.sh checkpoint-ui.sh; do
+  curl -sL "http://git.enflame.cn/skills/durablerequest/-/raw/main/skill/$f" -o "$DIR/$f"
+done && chmod +x "$DIR/checkpoint.sh" "$DIR/checkpoint-ui.sh"
 ```
 
 Change the target path for your platform — see [install.md](install.md) for all platform paths.

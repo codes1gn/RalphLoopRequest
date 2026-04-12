@@ -1,22 +1,8 @@
 import { motion } from "framer-motion";
 import { ScrollReveal } from "../components/ScrollReveal";
 import { CodeEditor } from "../components/CodeEditor";
-
-const tmuxCapture = `  === [durable-request] Checkpoint ===
-
-  Auth module refactored (3 files updated). What next?
-
-    1. Run the test suite
-    2. Iterate on implementation
-    3. Review the diff in detail
-    4. Commit changes
-    5. Done for now
-    6. I'll type my own instruction
-
-  ======================================
-
-  > Choice (number or text): 1
-  * Sent: Run the test suite`;
+import cliCase1 from "../assets/cursor cli case 1.png";
+import cliCase2 from "../assets/cursor cli case 2.png";
 
 const architectureDiagram = `┌──────────────────────────────────────────────────────┐
 │                    tmux session                       │
@@ -71,7 +57,20 @@ const steps = [
     desc: "checkpoint-ui.sh reads the question file, renders the interactive prompt with numbered options, and waits for user input via real TTY.",
     color: "text-emerald-400",
     bg: "bg-emerald-500/10",
-    code: tmuxCapture,
+    code: `  === [durable-request] Checkpoint ===
+
+  LinkedIn blog post written. What would you like to do next?
+
+    1. Edit the tone or wording
+    2. Make it shorter / more concise
+    3. Change the hashtags
+    4. Done — looks good
+    5. I'll type my own instruction
+
+  ======================================
+
+  > Choice (number or text): 2
+  * Sent: Make it shorter / more concise`,
   },
   {
     num: "04",
@@ -122,24 +121,26 @@ export function CLISession() {
               Usage
             </h2>
             <p className="text-sm text-[var(--muted-foreground)] text-center mb-4 max-w-xl mx-auto">
-              After installing durable-request, just run <code className="px-1.5 py-0.5 rounded bg-[var(--muted)] text-xs font-mono">cursor-agent</code> as usual.
-              The tmux alias wraps it automatically — you get the same Cursor CLI TUI, with interactive checkpoints built in.
+              After installing durable-request, just run <code className="px-1.5 py-0.5 rounded bg-[var(--muted)] text-xs font-mono">cursor-agent</code> inside tmux as usual.
+              The agent works normally — when it reaches a checkpoint, a split pane opens with your options.
             </p>
-            <div className="max-w-2xl mx-auto">
-              <CodeEditor filename="terminal">
-                <pre className="text-[var(--foreground)] text-xs sm:text-sm leading-relaxed">
-                  <code>{`# One-time setup (add to ~/.bashrc)
-alias cursor-agent='tmux new-session -A -s cursor -- cursor-agent'
-
-# Then just run it normally — tmux wraps transparently
-$ cursor-agent
-
-# The Cursor CLI TUI launches as usual inside tmux.
-# When the agent reaches a checkpoint, a split pane opens below
-# with your options. Pick one, the pane closes, agent continues.
-# Same request. Full context. No re-prompting.`}</code>
-                </pre>
-              </CodeEditor>
+            <div className="max-w-3xl mx-auto">
+              <div className="rounded-xl border-2 border-cyan-500/30 overflow-hidden shadow-2xl shadow-cyan-500/10">
+                <div className="flex items-center gap-2 px-4 py-2 border-b border-cyan-500/20 bg-[#161b22]">
+                  <div className="flex gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-red-400/80" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-yellow-400/80" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-green-400/80" />
+                  </div>
+                  <span className="text-[10px] text-cyan-400/70 ml-2 font-mono">
+                    cursor-agent inside tmux — checkpoint in action
+                  </span>
+                </div>
+                <img src={cliCase1} alt="Cursor CLI running inside tmux with a durable-request checkpoint split pane" className="w-full" />
+              </div>
+              <p className="text-center text-xs text-[var(--muted-foreground)] mt-2">
+                The agent finishes a task and opens a checkpoint in a tmux split pane — pick an option, the pane closes, agent continues
+              </p>
             </div>
           </div>
         </ScrollReveal>
@@ -189,30 +190,51 @@ $ cursor-agent
           </div>
         </div>
 
-        {/* Live Capture */}
+        {/* Real Screenshots */}
         <ScrollReveal delay={0.2}>
           <div className="mb-16">
             <h2 className="text-xl font-bold mb-2 text-center">
               Real Checkpoint UI
             </h2>
-            <p className="text-sm text-[var(--muted-foreground)] text-center mb-4">
-              Captured from an actual tmux split pane on this machine
+            <p className="text-sm text-[var(--muted-foreground)] text-center mb-6">
+              Captured from actual Cursor CLI sessions with tmux checkpoints
             </p>
-            <div className="max-w-lg mx-auto">
-              <div className="rounded-xl border-2 border-cyan-500/30 bg-[#0d1117] overflow-hidden shadow-2xl shadow-cyan-500/10">
-                <div className="flex items-center gap-2 px-4 py-2 border-b border-cyan-500/20 bg-[#161b22]">
-                  <div className="flex gap-1.5">
-                    <span className="w-2.5 h-2.5 rounded-full bg-red-400/80" />
-                    <span className="w-2.5 h-2.5 rounded-full bg-yellow-400/80" />
-                    <span className="w-2.5 h-2.5 rounded-full bg-green-400/80" />
+            <div className="space-y-6 max-w-3xl mx-auto">
+              <div>
+                <div className="rounded-xl border-2 border-cyan-500/30 overflow-hidden shadow-2xl shadow-cyan-500/10">
+                  <div className="flex items-center gap-2 px-4 py-2 border-b border-cyan-500/20 bg-[#161b22]">
+                    <div className="flex gap-1.5">
+                      <span className="w-2.5 h-2.5 rounded-full bg-red-400/80" />
+                      <span className="w-2.5 h-2.5 rounded-full bg-yellow-400/80" />
+                      <span className="w-2.5 h-2.5 rounded-full bg-green-400/80" />
+                    </div>
+                    <span className="text-[10px] text-cyan-400/70 ml-2 font-mono">
+                      tmux session — first checkpoint
+                    </span>
                   </div>
-                  <span className="text-[10px] text-cyan-400/70 ml-2 font-mono">
-                    tmux split-pane — checkpoint-ui.sh
-                  </span>
+                  <img src={cliCase1} alt="Cursor CLI checkpoint: agent finished writing a LinkedIn post and opens tmux split pane with options" className="w-full" />
                 </div>
-                <pre className="p-4 text-sm font-mono text-green-400 leading-relaxed">
-                  <code>{tmuxCapture}</code>
-                </pre>
+                <p className="text-center text-xs text-[var(--muted-foreground)] mt-2">
+                  Agent completes a task and opens a tmux checkpoint — user picks from numbered options
+                </p>
+              </div>
+              <div>
+                <div className="rounded-xl border-2 border-cyan-500/30 overflow-hidden shadow-2xl shadow-cyan-500/10">
+                  <div className="flex items-center gap-2 px-4 py-2 border-b border-cyan-500/20 bg-[#161b22]">
+                    <div className="flex gap-1.5">
+                      <span className="w-2.5 h-2.5 rounded-full bg-red-400/80" />
+                      <span className="w-2.5 h-2.5 rounded-full bg-yellow-400/80" />
+                      <span className="w-2.5 h-2.5 rounded-full bg-green-400/80" />
+                    </div>
+                    <span className="text-[10px] text-cyan-400/70 ml-2 font-mono">
+                      tmux session — second checkpoint (same request)
+                    </span>
+                  </div>
+                  <img src={cliCase2} alt="Cursor CLI second checkpoint: agent shortened the post and presents new contextual options" className="w-full" />
+                </div>
+                <p className="text-center text-xs text-[var(--muted-foreground)] mt-2">
+                  Same request continues — agent iterates and opens another checkpoint with adapted options
+                </p>
               </div>
             </div>
           </div>

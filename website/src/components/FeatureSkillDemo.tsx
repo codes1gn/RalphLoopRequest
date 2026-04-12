@@ -1,6 +1,8 @@
 import { FeatureCard } from "./FeatureCard";
 import { ScrollReveal } from "./ScrollReveal";
 import { CodeEditor } from "./CodeEditor";
+import cursorIdeCase from "../assets/cursor ide case 1.png";
+import cursorCliCase from "../assets/cursor cli case 1.png";
 
 const withoutSkill = `User:  Refactor the auth module
 
@@ -10,47 +12,6 @@ Agent: Done! I've refactored the auth module.
        ┊  (session ends silently)
        ┊  User must start a new request
        ┊  Context is lost`;
-
-const withSkill = `User:  Refactor the auth module
-
-Agent: [durable-request] Refactoring complete.
-       Called AskQuestion — checkpoint presented.
-
-       ┌───────────────────────────────────────┐
-       │  Auth module refactored.               │
-       │  What would you like to do next?       │
-       │                                        │
-       │  ○ Run the test suite                  │
-       │  ○ Refactor another module             │
-       │  ○ Review the diff                     │
-       │  ○ I'm satisfied, we're done           │
-       │  ○ I'll type my own instruction        │
-       └───────────────────────────────────────┘
-
-       Same request. Full context preserved.`;
-
-const withCLI = `$ cursor-agent  (inside tmux)
-
-Agent: [Shell] bash checkpoint.sh "Auth refactored"
-       [durable-request] Opening checkpoint in tmux...
-
-  ┌── Cursor Agent CLI ────────────────────┐
-  │  > Refactored auth module, 3 files...  │
-  │  > [Shell: waiting for checkpoint...]  │
-  ├── [durable-request] Checkpoint ────────┤
-  │                                        │
-  │   Auth module refactored. What next?   │
-  │                                        │
-  │    1. Run the test suite               │
-  │    2. Review the diff                  │
-  │    3. Done                             │
-  │    4. I'll type my own instruction     │
-  │                                        │
-  │   > Choice: 1                          │
-  └────────────────────────────────────────┘
-
-Agent: [durable-request] User responded: Run tests
-       Running pytest... All 42 tests passed.`;
 
 export function FeatureSkillDemo() {
   return (
@@ -86,11 +47,12 @@ export function FeatureSkillDemo() {
             <div className="absolute -top-2 left-3 px-2 py-0.5 bg-emerald-500 text-white text-xs font-semibold rounded z-10">
               With durable-request (Editor)
             </div>
-            <CodeEditor filename="cursor-editor.session">
-              <pre className="text-[var(--foreground)] text-xs">
-                <code>{withSkill}</code>
-              </pre>
-            </CodeEditor>
+            <div className="rounded-xl border bg-[var(--card)] overflow-hidden">
+              <div className="flex items-center gap-2 px-3 py-1.5 border-b bg-[var(--muted)]">
+                <span className="text-xs text-[var(--muted-foreground)] font-mono">cursor-editor — real checkpoint</span>
+              </div>
+              <img src={cursorIdeCase} alt="Cursor IDE AskQuestion checkpoint with interactive options" className="w-full" />
+            </div>
           </div>
         </ScrollReveal>
 
@@ -99,11 +61,12 @@ export function FeatureSkillDemo() {
             <div className="absolute -top-2 left-3 px-2 py-0.5 bg-cyan-500 text-white text-xs font-semibold rounded z-10">
               With durable-request (CLI + tmux)
             </div>
-            <CodeEditor filename="cursor-cli.session">
-              <pre className="text-[var(--foreground)] text-xs">
-                <code>{withCLI}</code>
-              </pre>
-            </CodeEditor>
+            <div className="rounded-xl border bg-[var(--card)] overflow-hidden">
+              <div className="flex items-center gap-2 px-3 py-1.5 border-b bg-[var(--muted)]">
+                <span className="text-xs text-[var(--muted-foreground)] font-mono">cursor-cli — real tmux checkpoint</span>
+              </div>
+              <img src={cursorCliCase} alt="Cursor CLI tmux split pane checkpoint with numbered options" className="w-full" />
+            </div>
           </div>
         </ScrollReveal>
       </div>
