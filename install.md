@@ -9,13 +9,12 @@ Two components:
 1. **Skill file** (`skill/SKILL.md`) — teaches any AI agent to present an interactive checkpoint after completing any task. Works on all platforms. No runtime, no dependencies.
 2. **CLI checkpoint tool** (`skill/checkpoint.sh` + `skill/checkpoint-ui.sh`, Cursor CLI only) — enables true blocking interactive checkpoints in Cursor CLI via tmux split panes. Optional for other platforms.
 
-## Step 1: Fetch the Skill File
+## Step 1: Clone the Repository
 
-Download the skill file from the repository:
+Clone the repo via SSH (requires a git.enflame.cn account with SSH key configured):
 
 ```bash
-curl -sL "http://git.enflame.cn/skills/durablerequest/-/raw/main/skill/SKILL.md" \
-  -o /tmp/durable-request-SKILL.md
+git clone git@git.enflame.cn:skills/durablerequest.git /tmp/durable-request-repo
 ```
 
 ## Step 2: Install to Agent Skill Directories
@@ -39,7 +38,7 @@ Install to **project-level** (current directory) and **personal** (`~`) for each
 For each directory in the table above, run:
 
 ```bash
-mkdir -p <directory> && cp /tmp/durable-request-SKILL.md <directory>/SKILL.md
+mkdir -p <directory> && cp /tmp/durable-request-repo/skill/SKILL.md <directory>/SKILL.md
 ```
 
 ## Step 3: Install CLI Checkpoint Tool (Cursor CLI only)
@@ -48,25 +47,16 @@ This step is **only for Cursor CLI** users. Skip for other platforms.
 
 The CLI checkpoint tool enables true blocking interactive checkpoints in Cursor CLI via tmux split panes.
 
-### 3a: Download the checkpoint scripts
+### 3a: Copy checkpoint scripts from the cloned repo
 
 ```bash
-curl -sL "http://git.enflame.cn/skills/durablerequest/-/raw/main/skill/checkpoint.sh" \
-  -o /tmp/durable-checkpoint.sh
-curl -sL "http://git.enflame.cn/skills/durablerequest/-/raw/main/skill/checkpoint-ui.sh" \
-  -o /tmp/durable-checkpoint-ui.sh
-```
-
-### 3b: Install to Cursor skills directory
-
-```bash
-cp /tmp/durable-checkpoint.sh ~/.cursor/skills/durable-request/checkpoint.sh
-cp /tmp/durable-checkpoint-ui.sh ~/.cursor/skills/durable-request/checkpoint-ui.sh
+cp /tmp/durable-request-repo/skill/checkpoint.sh ~/.cursor/skills/durable-request/checkpoint.sh
+cp /tmp/durable-request-repo/skill/checkpoint-ui.sh ~/.cursor/skills/durable-request/checkpoint-ui.sh
 chmod +x ~/.cursor/skills/durable-request/checkpoint.sh
 chmod +x ~/.cursor/skills/durable-request/checkpoint-ui.sh
 ```
 
-### 3c: Set up tmux + locale (required for Cursor CLI)
+### 3b: Set up tmux + locale (required for Cursor CLI)
 
 Add these to `~/.bashrc`:
 
@@ -93,10 +83,10 @@ TMUXEOF
 
 If tmux is already running, kill it so it picks up the new config: `tmux kill-server`
 
-### 3d: Clean up
+### 3c: Verify checkpoint scripts
 
 ```bash
-rm -f /tmp/durable-checkpoint.sh /tmp/durable-checkpoint-ui.sh
+ls -la ~/.cursor/skills/durable-request/checkpoint*.sh
 ```
 
 ## Step 4: Verify
@@ -124,7 +114,7 @@ The skill is active the next time you start an agent session. No config changes 
 ## Cleanup
 
 ```bash
-rm -f /tmp/durable-request-SKILL.md
+rm -rf /tmp/durable-request-repo
 ```
 
 ## Uninstall

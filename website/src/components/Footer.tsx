@@ -16,7 +16,7 @@ export function Footer() {
           >
             GitLab
           </a>
-          <span>MIT License</span>
+          <span>Apache License 2.0</span>
         </div>
       </div>
     </footer>

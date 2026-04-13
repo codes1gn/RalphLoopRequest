@@ -48,6 +48,14 @@ export function Navbar() {
             Changelog
           </Link>
           <Link
+            to="/roadmap"
+            className={`hover:text-[var(--foreground)] transition-colors ${
+              location.pathname === "/roadmap" ? "text-[var(--foreground)] font-semibold" : ""
+            }`}
+          >
+            Roadmap
+          </Link>
+          <Link
             to="/cli-session"
             className={`hover:text-[var(--foreground)] transition-colors ${
               location.pathname === "/cli-session" ? "text-[var(--foreground)] font-semibold" : ""

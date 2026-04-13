@@ -4,6 +4,7 @@ import { Footer } from "./components/Footer";
 import { Home } from "./pages/Home";
 import { Changelog } from "./pages/Changelog";
 import { CLISession } from "./pages/CLISession";
+import { Roadmap } from "./pages/Roadmap";
 
 export function App() {
   return (
@@ -14,6 +15,7 @@ export function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/changelog" element={<Changelog />} />
+            <Route path="/roadmap" element={<Roadmap />} />
             <Route path="/cli-session" element={<CLISession />} />
           </Routes>
         </main>

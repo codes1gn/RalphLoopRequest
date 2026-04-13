@@ -128,29 +128,50 @@ Validated across **3 epochs** with **170 total subagent experiments**.
 
 ## Installation
 
+### Quick Install (git clone + copy)
+
+```bash
+# 1. Clone the repo
+git clone git@git.enflame.cn:skills/durablerequest.git /tmp/durable-request
+
+# 2. Install to Cursor (personal scope)
+DIR=~/.cursor/skills/durable-request && mkdir -p "$DIR" && \
+cp /tmp/durable-request/skill/{SKILL.md,checkpoint.sh,checkpoint-ui.sh} "$DIR/" && \
+chmod +x "$DIR/checkpoint.sh" "$DIR/checkpoint-ui.sh"
+
+# 3. Clean up
+rm -rf /tmp/durable-request
+```
+
 ### For Agents (Recommended)
 
 Paste this into any AI agent chat — it will install itself:
 
 ```
-Install durable-request by following the instructions at:
-http://git.enflame.cn/skills/durablerequest/-/raw/main/install.md
+Install durable-request: clone git@git.enflame.cn:skills/durablerequest.git,
+then copy the skill/ folder contents into the appropriate skill directories.
+See install.md in the repo for the full list of platform paths.
 ```
 
-The agent fetches the install guide and handles everything: downloading the skill file, creating directories, and copying to all 9 platform locations at both project and personal scope.
+The agent handles everything: cloning the repo, creating directories, and copying to all 9 platform locations at both project and personal scope.
 
-### Manual (Single Platform)
-
-The skill is the entire `skill/` folder — install it as a `durable-request/` directory:
+### Manual (All Platforms)
 
 ```bash
-DIR=~/.cursor/skills/durable-request && mkdir -p "$DIR" && \
-for f in SKILL.md checkpoint.sh checkpoint-ui.sh; do
-  curl -sL "http://git.enflame.cn/skills/durablerequest/-/raw/main/skill/$f" -o "$DIR/$f"
-done && chmod +x "$DIR/checkpoint.sh" "$DIR/checkpoint-ui.sh"
+# 1. Clone the repo (SSH — requires git.enflame.cn account)
+git clone git@git.enflame.cn:skills/durablerequest.git /tmp/durable-request
+
+# 2. Pick your platform directory and copy
+DIR=~/.cursor/skills/durable-request   # ← change for your platform
+mkdir -p "$DIR"
+cp /tmp/durable-request/skill/{SKILL.md,checkpoint.sh,checkpoint-ui.sh} "$DIR/"
+chmod +x "$DIR/checkpoint.sh" "$DIR/checkpoint-ui.sh"
+
+# 3. Clean up
+rm -rf /tmp/durable-request
 ```
 
-Change the target path for your platform — see [install.md](install.md) for all platform paths.
+See [install.md](install.md) for all platform paths.
 
 ---
 
