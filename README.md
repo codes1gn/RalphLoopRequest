@@ -6,7 +6,7 @@
 </p>
 
 <p align="center">
-  <a href="http://git.enflame.cn/skills/durablerequest/-/blob/main/LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg"></a>
+  <a href="http://git.enflame.cn/skills/durablerequest/-/blob/main/LICENSE"><img alt="License: Apache 2.0" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>
   <a href="http://git.enflame.cn/skills/durablerequest"><img alt="Stars" src="https://img.shields.io/badge/Stars-0-blue"></a>
   <a href="http://git.enflame.cn/skills/durablerequest/-/issues"><img alt="Issues" src="https://img.shields.io/badge/Issues-0-red"></a>
 </p>
@@ -366,7 +366,9 @@ Found a platform we should support? Have ideas for better checkpoint options? Op
 
 ## License
 
-[MIT](LICENSE)
+[Apache License 2.0](LICENSE)
+
+Copyright 2026 Enflame Intelligence Technologies Co., Ltd.
 
 ## Author
 
